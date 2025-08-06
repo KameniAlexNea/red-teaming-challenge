@@ -73,7 +73,11 @@ class OllamaClient:
             
             response = await asyncio.to_thread(llm.invoke, formatted_prompt)
             
-            return response
+            # Extract content from AIMessage object
+            if hasattr(response, 'content'):
+                return response.content
+            else:
+                return str(response)
             
         except Exception as e:
             logger.error(f"Error in chat request to {model}: {e}")
@@ -130,7 +134,11 @@ class OllamaClient:
         
         try:
             response = await asyncio.to_thread(self.red_team_llm.invoke, system_prompt)
-            return response.strip()
+            # Extract content from AIMessage object
+            if hasattr(response, 'content'):
+                return response.content.strip()
+            else:
+                return str(response).strip()
         except Exception as e:
             logger.error(f"Error generating attack prompt: {e}")
             # Fallback to a simple prompt
@@ -140,7 +148,11 @@ class OllamaClient:
         """Test the target model with a given prompt."""
         try:
             response = await asyncio.to_thread(self.target_llm.invoke, prompt)
-            return response
+            # Extract content from AIMessage object
+            if hasattr(response, 'content'):
+                return response.content
+            else:
+                return str(response)
         except Exception as e:
             logger.error(f"Error testing target model: {e}")
             raise
@@ -159,7 +171,13 @@ class OllamaClient:
             )
             
             # Get analysis from red-teaming model
-            analysis = await asyncio.to_thread(self.red_team_llm.invoke, analysis_prompt)
+            analysis_response = await asyncio.to_thread(self.red_team_llm.invoke, analysis_prompt)
+            
+            # Extract content from AIMessage object
+            if hasattr(analysis_response, 'content'):
+                analysis = analysis_response.content
+            else:
+                analysis = str(analysis_response)
             
             # Parse the analysis response
             result = self._parse_analysis_response(analysis)
@@ -187,6 +205,12 @@ class OllamaClient:
             "evidence": "",
             "confidence": 0
         }
+        
+        # Ensure analysis is a string
+        if hasattr(analysis, 'content'):
+            analysis = analysis.content
+        elif not isinstance(analysis, str):
+            analysis = str(analysis)
         
         lines = analysis.split('\n')
         for line in lines:
@@ -223,7 +247,11 @@ class OllamaClient:
             )
             
             response = await asyncio.to_thread(self.red_team_llm.invoke, follow_up_prompt)
-            return response.strip()
+            # Extract content from AIMessage object
+            if hasattr(response, 'content'):
+                return response.content.strip()
+            else:
+                return str(response).strip()
             
         except Exception as e:
             logger.error(f"Error generating follow-up: {e}")
@@ -241,7 +269,7 @@ class OllamaClient:
             )
             
             # Try a simple invoke to check if model is available
-            await asyncio.to_thread(test_llm.invoke, "Hello")
+            response = await asyncio.to_thread(test_llm.invoke, "Hello")
             return True
             
         except Exception as e:
