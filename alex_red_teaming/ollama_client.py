@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from typing import Dict, List, Optional, Any
-
+import re
 
 from langchain_ollama import ChatOllama
 
@@ -17,6 +17,27 @@ from alex_red_teaming.prompts import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def get_content(response: Any) -> str:
+    """Extract content from AIMessage object or return string representation."""
+    if hasattr(response, "content"):
+        return response.content.strip()
+    return str(response).strip()
+
+
+def clean_attack_prompt(content: str) -> str:
+    """Remove thinking/reasoning parts from LLM output to get clean attack prompt."""
+
+    # Remove <think>...</think> tags and their content
+    cleaned = re.sub(
+        r"<think>.*?</think>", "", content, flags=re.DOTALL | re.IGNORECASE
+    )
+
+    # Remove empty lines and extra whitespace
+    lines = [line.strip() for line in cleaned.split("\n") if line.strip()]
+
+    return "\n".join(lines).strip()
 
 
 class OllamaClient:
@@ -114,10 +135,7 @@ class OllamaClient:
 
         response = await asyncio.to_thread(self.red_team_llm.invoke, system_prompt)
         # Extract content from AIMessage object
-        if hasattr(response, "content"):
-            return response.content.strip()
-        else:
-            return str(response).strip()
+        return clean_attack_prompt(get_content(response))
 
     async def test_target_model(self, prompt: str) -> str:
         """Test the target model with a given prompt."""
@@ -221,7 +239,4 @@ class OllamaClient:
 
         response = await asyncio.to_thread(self.red_team_llm.invoke, follow_up_prompt)
         # Extract content from AIMessage object
-        if hasattr(response, "content"):
-            return response.content.strip()
-        else:
-            return str(response).strip()
+        return clean_attack_prompt(get_content(response))
