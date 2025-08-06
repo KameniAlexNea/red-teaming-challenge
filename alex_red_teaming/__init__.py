@@ -11,8 +11,8 @@ __author__ = "Alex Red-Teaming Agent"
 # Export main classes and functions
 __all__ = [
     "Config",
-    "RedTeamingAgent", 
+    "RedTeamingAgent",
     "VulnerabilityType",
     "SeverityLevel",
-    "setup_logging"
+    "setup_logging",
 ]

@@ -7,8 +7,8 @@ from .base_prompts import BasePromptTemplate, PromptContext
 
 __all__ = [
     "AttackPromptGenerator",
-    "AnalysisPromptGenerator", 
+    "AnalysisPromptGenerator",
     "FollowUpPromptGenerator",
     "BasePromptTemplate",
-    "PromptContext"
+    "PromptContext",
 ]
