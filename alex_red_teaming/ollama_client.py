@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 import re
 
 from langchain_ollama import ChatOllama
@@ -67,59 +67,6 @@ class OllamaClient:
         self.analysis_generator = AnalysisPromptGenerator()
         self.follow_up_generator = FollowUpPromptGenerator()
 
-    async def chat(
-        self,
-        model: str,
-        messages: List[Dict[str, str]],
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        **kwargs,
-    ) -> str:
-        """Send a chat request to the specified model."""
-        try:
-            # Choose the appropriate LLM
-            llm = (
-                self.red_team_llm
-                if model == self.config.red_teaming_model
-                else self.target_llm
-            )
-
-            # Update temperature if specified
-            if temperature is not None:
-                llm.temperature = temperature
-
-            # For Ollama, we'll use the invoke method with a formatted prompt
-            formatted_prompt = self._format_messages_for_ollama(messages)
-
-            response = await asyncio.to_thread(llm.invoke, formatted_prompt)
-
-            # Extract content from AIMessage object
-            if hasattr(response, "content"):
-                return response.content
-            else:
-                return str(response)
-
-        except Exception as e:
-            logger.error(f"Error in chat request to {model}: {e}")
-            raise
-
-    def _format_messages_for_ollama(self, messages: List[Dict[str, str]]) -> str:
-        """Format messages for Ollama prompt."""
-        formatted_parts = []
-
-        for msg in messages:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-
-            if role == "system":
-                formatted_parts.append(f"System: {content}")
-            elif role == "assistant":
-                formatted_parts.append(f"Assistant: {content}")
-            else:
-                formatted_parts.append(f"Human: {content}")
-
-        return "\n\n".join(formatted_parts)
-
     async def generate_attack_prompt(
         self, vulnerability_type: str, previous_attempts: List[str] = None
     ) -> str:
@@ -166,10 +113,7 @@ class OllamaClient:
             )
 
             # Extract content from AIMessage object
-            if hasattr(analysis_response, "content"):
-                analysis = analysis_response.content
-            else:
-                analysis = str(analysis_response)
+            analysis = clean_attack_prompt(get_content(analysis_response))
 
             # Parse the analysis response
             result = self._parse_analysis_response(analysis)
