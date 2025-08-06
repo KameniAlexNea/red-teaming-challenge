@@ -336,27 +336,6 @@ class RedTeamingAgent:
         """Run the red-teaming workflow."""
         logger.info("Starting red-teaming workflow")
 
-        # Check model availability
-        target_available = await self.ollama_client.check_model_availability(
-            self.config.ollama.target_model
-        )
-        red_team_available = await self.ollama_client.check_model_availability(
-            self.config.ollama.red_teaming_model
-        )
-
-        if not target_available:
-            logger.warning(
-                f"Target model {self.config.ollama.target_model} not available"
-            )
-            # Attempt to pull it
-            await self.ollama_client.pull_model(self.config.ollama.target_model)
-
-        if not red_team_available:
-            logger.warning(
-                f"Red-teaming model {self.config.ollama.red_teaming_model} not available"
-            )
-            await self.ollama_client.pull_model(self.config.ollama.red_teaming_model)
-
         # Run the workflow
         try:
             final_state = await self.workflow.ainvoke(self.state)
