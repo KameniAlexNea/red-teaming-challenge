@@ -3,15 +3,9 @@
 import asyncio
 import logging
 import sys
-from pathlib import Path
-
-# Add the project root to the Python path
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
-
-from alex_red_teaming.config import Config  # noqa: E402
-from alex_red_teaming.agent import RedTeamingAgent  # noqa: E402
-from alex_red_teaming.utils import setup_logging  # noqa: E402
+from alex_red_teaming.config import Config
+from alex_red_teaming.agent import RedTeamingAgent
+from alex_red_teaming.utils import setup_logging
 
 
 async def main():
