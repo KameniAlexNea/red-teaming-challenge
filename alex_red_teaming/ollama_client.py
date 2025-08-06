@@ -118,6 +118,7 @@ class OllamaClient:
             return response.content.strip()
         else:
             return str(response).strip()
+
     async def test_target_model(self, prompt: str) -> str:
         """Test the target model with a given prompt."""
         try:
@@ -218,9 +219,7 @@ class OllamaClient:
             conversation_history, vulnerability_type, strategy
         )
 
-        response = await asyncio.to_thread(
-            self.red_team_llm.invoke, follow_up_prompt
-        )
+        response = await asyncio.to_thread(self.red_team_llm.invoke, follow_up_prompt)
         # Extract content from AIMessage object
         if hasattr(response, "content"):
             return response.content.strip()
