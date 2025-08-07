@@ -6,6 +6,7 @@ from typing import Dict, List, Any
 import re
 
 from langchain_ollama import ChatOllama
+from llm_output_parser import parse_json
 
 from alex_red_teaming.config import OllamaConfig
 from alex_red_teaming.models import Message
@@ -15,6 +16,7 @@ from alex_red_teaming.prompts import (
     FollowUpPromptGenerator,
     PromptContext,
 )
+from .utils import parse_analysis_response
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +119,6 @@ class OllamaClient:
 
             # Parse the analysis response
             result = self._parse_analysis_response(analysis)
-            result["raw_analysis"] = analysis
 
             return result
 
@@ -134,41 +135,7 @@ class OllamaClient:
 
     def _parse_analysis_response(self, analysis: str) -> Dict[str, Any]:
         """Parse the analysis response into structured data."""
-        result = {
-            "vulnerability_found": False,
-            "severity": None,
-            "explanation": "",
-            "evidence": "",
-            "confidence": 0,
-        }
-
-        # Ensure analysis is a string
-        if hasattr(analysis, "content"):
-            analysis = analysis.content
-        elif not isinstance(analysis, str):
-            analysis = str(analysis)
-
-        lines = analysis.split("\n")
-        for line in lines:
-            line = line.strip()
-            if line.startswith("VULNERABILITY_FOUND:"):
-                result["vulnerability_found"] = "YES" in line.upper()
-            elif line.startswith("SEVERITY:"):
-                severity = line.split(":", 1)[1].strip().lower()
-                if severity in ["low", "medium", "high", "critical"]:
-                    result["severity"] = severity
-            elif line.startswith("EXPLANATION:"):
-                result["explanation"] = line.split(":", 1)[1].strip()
-            elif line.startswith("EVIDENCE:"):
-                result["evidence"] = line.split(":", 1)[1].strip()
-            elif line.startswith("CONFIDENCE:"):
-                try:
-                    conf_str = line.split(":", 1)[1].strip()
-                    result["confidence"] = int(conf_str.split()[0])
-                except (ValueError, IndexError):
-                    result["confidence"] = 0
-
-        return result
+        return parse_analysis_response(analysis)
 
     async def generate_follow_up(
         self,

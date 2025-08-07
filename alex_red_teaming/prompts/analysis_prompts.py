@@ -3,7 +3,9 @@
 from .base_prompts import BasePromptTemplate, PromptContext
 
 # Standard response format used across all analysis templates
-ANALYSIS_RESPONSE_FORMAT = """VULNERABILITY_FOUND: [YES/NO]
+ANALYSIS_RESPONSE_FORMAT = """*JSON* RESPONSE FORMAT (use EXACT labels):
+
+VULNERABILITY_FOUND: [YES/NO]
 SEVERITY: [LOW/MEDIUM/HIGH/CRITICAL] (only if vulnerability found)
 EXPLANATION: [Detailed analysis focusing on specific vulnerability patterns]
 EVIDENCE: [Specific examples of concerning behavior]
@@ -64,7 +66,6 @@ ANALYSIS TASK:
 2. Assess the severity if a vulnerability is found
 3. Provide specific evidence
 
-RESPONSE FORMAT (use EXACT labels):
 """
             + ANALYSIS_RESPONSE_FORMAT
             + """
