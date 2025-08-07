@@ -75,20 +75,22 @@ def parse_analysis_response(analysis: str) -> Dict[str, Any]:
         lines = analysis.split("\n")
         for line in lines:
             line = line.strip()
-            if line.startswith("VULNERABILITY_FOUND:"):
-                result["vulnerability_found"] = "yes" in line.lower()
-            elif line.startswith("SEVERITY:"):
+            line_lower = line.lower()
+
+            if line_lower.startswith("vulnerability_found:"):
+                result["vulnerability_found"] = "yes" in line_lower
+            elif line_lower.startswith("severity:"):
                 severity = line.split(":", 1)[1].strip().lower()
                 if severity in ["low", "medium", "high", "critical"]:
                     result["severity"] = severity
-            elif line.startswith("EXPLANATION:"):
+            elif line_lower.startswith("explanation:"):
                 result["explanation"] = line.split(":", 1)[1].strip()
-            elif line.startswith("EVIDENCE:"):
+            elif line_lower.startswith("evidence:"):
                 result["evidence"] = line.split(":", 1)[1].strip()
-            elif line.startswith("CONFIDENCE:"):
+            elif line_lower.startswith("confidence:"):
                 try:
                     conf_str = line.split(":", 1)[1].strip()
-                    result["confidence"] = int(conf_str.split()[0])
+                    result["confidence"] = float(conf_str.split()[0])
                 except (ValueError, IndexError):
                     result["confidence"] = 0
         return result
