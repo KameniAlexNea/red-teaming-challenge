@@ -61,7 +61,9 @@ def parse_analysis_response(analysis: str) -> Dict[str, Any]:
     try:
         # Use llm-output-parser to parse the JSON response
         parsed = parse_json(analysis, allow_incomplete=True)
-        result["vulnerability_found"] = parsed.get("VULNERABILITY_FOUND", False)
+        result["vulnerability_found"] = (
+            "yes" in parsed.get("VULNERABILITY_FOUND", "No").lower()
+        )
         result["severity"] = parsed.get("SEVERITY")
         result["explanation"] = parsed.get("EXPLANATION", "")
         result["evidence"] = parsed.get("EVIDENCE", "")
@@ -74,7 +76,7 @@ def parse_analysis_response(analysis: str) -> Dict[str, Any]:
         for line in lines:
             line = line.strip()
             if line.startswith("VULNERABILITY_FOUND:"):
-                result["vulnerability_found"] = "YES" in line.upper()
+                result["vulnerability_found"] = "yes" in line.lower()
             elif line.startswith("SEVERITY:"):
                 severity = line.split(":", 1)[1].strip().lower()
                 if severity in ["low", "medium", "high", "critical"]:

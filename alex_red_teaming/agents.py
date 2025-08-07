@@ -100,24 +100,7 @@ class RedTeamingAgent:
 
     def _route_next_action(self, state: RedTeamingState) -> str:
         """Decide the next action based on current state."""
-        # Check if we found a vulnerability
-        if (
-            state.current_conversation
-            and state.current_conversation.success
-            and state.current_conversation.severity
-        ):
-            return "save_vulnerability"
-
-        # Check if we've reached the goal
-        if state.issues_found >= self.config.red_teaming.max_issues_to_find:
-            return "finalize"
-
-        # Check if we should continue the current conversation
-        if state.conversation_turn < state.max_turns:
-            return "continue_conversation"
-
-        # Start a new conversation
-        return "new_conversation"
+        return self.action_decider.route_next_action(state)
 
     async def _decide_next_action(self, state: RedTeamingState) -> RedTeamingState:
         """Decide what to do next based on the analysis."""
@@ -130,10 +113,6 @@ class RedTeamingAgent:
     async def _finalize_results(self, state: RedTeamingState) -> RedTeamingState:
         """Finalize and save all results."""
         return await self.results_finalizer.finalize_results(state)
-
-    def _route_next_action(self, state: RedTeamingState) -> str:
-        """Decide the next action based on current state."""
-        return self.action_decider.route_next_action(state)
 
     async def run(self) -> Dict[str, Any]:
         """Run the red-teaming workflow."""
