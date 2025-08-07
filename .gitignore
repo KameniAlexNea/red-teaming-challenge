@@ -225,3 +225,5 @@ results_*/
 *.bin
 *.safetensors
 *.gguf
+
+.vscode

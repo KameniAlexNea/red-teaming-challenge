@@ -1,6 +1,6 @@
 """Data models for the red-teaming agent."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 from enum import Enum
@@ -41,12 +41,9 @@ class Message:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
-            "role": self.role,
-            "content": self.content,
-            "timestamp": self.timestamp.isoformat(),
-            "metadata": self.metadata,
-        }
+        data = asdict(self)
+        data["timestamp"] = self.timestamp.isoformat()
+        return data
 
 
 @dataclass
@@ -69,18 +66,14 @@ class Conversation:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
-            "id": self.id,
-            "messages": [msg.to_dict() for msg in self.messages],
-            "vulnerability_type": (
-                self.vulnerability_type.value if self.vulnerability_type else None
-            ),
-            "attack_strategy": self.attack_strategy,
-            "success": self.success,
-            "severity": self.severity.value if self.severity else None,
-            "created_at": self.created_at.isoformat(),
-            "metadata": self.metadata,
-        }
+        data = asdict(self)
+        data["messages"] = [msg.to_dict() for msg in self.messages]
+        data["vulnerability_type"] = (
+            self.vulnerability_type.value if self.vulnerability_type else None
+        )
+        data["severity"] = self.severity.value if self.severity else None
+        data["created_at"] = self.created_at.isoformat()
+        return data
 
 
 @dataclass
@@ -101,19 +94,11 @@ class Vulnerability:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
-            "id": self.id,
-            "type": self.type.value,
-            "severity": self.severity.value,
-            "title": self.title,
-            "description": self.description,
-            "attack_vector": self.attack_vector,
-            "conversation_id": self.conversation_id,
-            "proof_of_concept": self.proof_of_concept,
-            "mitigation_suggestions": self.mitigation_suggestions,
-            "discovered_at": self.discovered_at.isoformat(),
-            "metadata": self.metadata,
-        }
+        data = asdict(self)
+        data["type"] = self.type.value
+        data["severity"] = self.severity.value
+        data["discovered_at"] = self.discovered_at.isoformat()
+        return data
 
 
 @dataclass
@@ -140,27 +125,24 @@ class RedTeamingState:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
-            "current_conversation": (
-                self.current_conversation.to_dict()
-                if self.current_conversation
-                else None
-            ),
-            "discovered_vulnerabilities": [
-                vuln.to_dict() for vuln in self.discovered_vulnerabilities
-            ],
-            "failed_attempts": [conv.to_dict() for conv in self.failed_attempts],
-            "current_vulnerability_type": (
-                self.current_vulnerability_type.value
-                if self.current_vulnerability_type
-                else None
-            ),
-            "conversation_turn": self.conversation_turn,
-            "max_turns": self.max_turns,
-            "attack_strategies_tried": self.attack_strategies_tried,
-            "issues_found": self.issues_found,
-            "is_complete": self.is_complete,
-        }
+        data = asdict(self)
+        # Convert nested objects to dictionaries
+        data["current_conversation"] = (
+            self.current_conversation.to_dict() if self.current_conversation else None
+        )
+        data["discovered_vulnerabilities"] = [
+            vuln.to_dict() for vuln in self.discovered_vulnerabilities
+        ]
+        data["failed_attempts"] = [conv.to_dict() for conv in self.failed_attempts]
+        data["current_vulnerability_type"] = (
+            self.current_vulnerability_type.value
+            if self.current_vulnerability_type
+            else None
+        )
+        # Add computed properties
+        data["issues_found"] = self.issues_found
+        data["is_complete"] = self.is_complete
+        return data
 
 
 @dataclass
@@ -176,11 +158,6 @@ class AttackPrompt:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
-            "content": self.content,
-            "vulnerability_type": self.vulnerability_type.value,
-            "strategy": self.strategy,
-            "expected_outcome": self.expected_outcome,
-            "follow_up_prompts": self.follow_up_prompts,
-            "metadata": self.metadata,
-        }
+        data = asdict(self)
+        data["vulnerability_type"] = self.vulnerability_type.value
+        return data
