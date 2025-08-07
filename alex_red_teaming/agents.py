@@ -1,6 +1,6 @@
 """Red-teaming agent using LangGraph workflow."""
 
-import logging
+from loguru import logger
 from typing import Dict, Any
 
 from langgraph.graph import StateGraph, START, END
@@ -17,8 +17,6 @@ from alex_red_teaming.agent import (
     VulnerabilitySaver,
     ResultsFinalizer,
 )
-
-logger = logging.getLogger(__name__)
 
 
 class RedTeamingAgent:

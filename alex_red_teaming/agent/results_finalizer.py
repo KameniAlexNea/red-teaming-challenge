@@ -1,12 +1,10 @@
 """Results finalization agent."""
 
-import logging
+from loguru import logger
 from datetime import datetime
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.config import Config
 from alex_red_teaming.utils import create_output_dir, save_json
-
-logger = logging.getLogger(__name__)
 
 
 class ResultsFinalizer:

@@ -1,10 +1,8 @@
 """Target model testing agent."""
 
-import logging
+from loguru import logger
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
-
-logger = logging.getLogger(__name__)
 
 
 class TargetTester:

@@ -1,7 +1,7 @@
 """Main script to run the red-teaming agent."""
 
 import asyncio
-import logging
+from loguru import logger
 import sys
 from alex_red_teaming.config import Config
 from alex_red_teaming.agents import RedTeamingAgent
@@ -13,7 +13,6 @@ async def main():
 
     # Setup logging
     setup_logging("INFO")
-    logger = logging.getLogger(__name__)
 
     logger.info("Starting Red-Teaming Agent for GPT-OSS-20B")
 

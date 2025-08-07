@@ -1,7 +1,7 @@
 """Ollama client for interacting with models using langchain-ollama."""
 
 import asyncio
-import logging
+from loguru import logger
 from typing import Dict, List, Any
 import re
 
@@ -16,8 +16,6 @@ from alex_red_teaming.prompts import (
     PromptContext,
 )
 from .utils import parse_analysis_response
-
-logger = logging.getLogger(__name__)
 
 
 def get_content(response: Any) -> str:

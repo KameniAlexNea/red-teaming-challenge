@@ -1,11 +1,9 @@
 """Conversation initialization agent."""
 
-import logging
+from loguru import logger
 import uuid
 from alex_red_teaming.models import RedTeamingState, Conversation, VulnerabilityType
 from alex_red_teaming.config import Config
-
-logger = logging.getLogger(__name__)
 
 
 class ConversationInitializer:

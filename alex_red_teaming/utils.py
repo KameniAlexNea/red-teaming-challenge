@@ -1,13 +1,11 @@
 """Utility functions for the red-teaming agent."""
 
 import json
-import logging
+from loguru import logger
 from pathlib import Path
 from typing import Any, Dict
 from datetime import datetime
 from llm_output_parser import parse_json
-
-logger = logging.getLogger(__name__)
 
 
 def create_output_dir(base_dir: str) -> Path:
@@ -32,20 +30,6 @@ def save_json(data: Dict[str, Any], filepath: Path) -> None:
         logger.debug(f"Saved JSON to {filepath}")
     except Exception as e:
         logger.error(f"Error saving JSON to {filepath}: {e}")
-
-
-def setup_logging(log_level: str = "INFO", log_file: str = None) -> None:
-    """Setup logging configuration."""
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-    handlers = [logging.StreamHandler()]
-
-    if log_file:
-        handlers.append(logging.FileHandler(log_file))
-
-    logging.basicConfig(
-        level=getattr(logging, log_level.upper()), format=log_format, handlers=handlers
-    )
 
 
 def parse_analysis_response(analysis: str) -> Dict[str, Any]:
