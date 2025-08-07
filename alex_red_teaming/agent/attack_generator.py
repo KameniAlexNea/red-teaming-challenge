@@ -3,6 +3,7 @@
 import logging
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
+from alex_red_teaming.prompts.follow_up_prompts import FollowUpPromptGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -10,8 +11,19 @@ logger = logging.getLogger(__name__)
 class AttackGenerator:
     """Agent responsible for generating attack prompts."""
 
-    def __init__(self, ollama_client: OllamaClient):
+    def __init__(self, config, ollama_client: OllamaClient):
+        self.config = config
         self.ollama_client = ollama_client
+        self.follow_up_generator = FollowUpPromptGenerator()
+        # Get all available strategies dynamically
+        self.available_strategies = list(self.follow_up_generator.escalation_strategies.keys())
+        logger.info(f"Available escalation strategies: {self.available_strategies}")
+
+    def get_next_strategy(self, state: RedTeamingState) -> str:
+        """Get the next strategy to use based on conversation state."""
+        # Use different strategies in order, cycling through all available ones
+        strategy_index = state.conversation_turn % len(self.available_strategies)
+        return self.available_strategies[strategy_index]
 
     async def generate_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
         """Generate an attack prompt for the current vulnerability type."""
@@ -35,14 +47,9 @@ class AttackGenerator:
                     state.current_vulnerability_type.value, previous_attempts
                 )
             else:
-                # Generate follow-up prompt with strategy selection
-                strategies = [
-                    "gradual_escalation",
-                    "angle_change",
-                    "context_shift",
-                    "pressure_increase",
-                ]
-                strategy = strategies[state.conversation_turn % len(strategies)]
+                # Generate follow-up prompt with dynamic strategy selection
+                strategy = self.get_next_strategy(state)
+                logger.info(f"Using escalation strategy: {strategy}")
 
                 prompt = await self.ollama_client.generate_follow_up(
                     state.current_conversation.messages,
