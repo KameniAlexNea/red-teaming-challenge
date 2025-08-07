@@ -22,11 +22,13 @@ class ConversationInitializer:
             or state.conversation_turn >= state.max_turns
         ):
             # Choose next vulnerability type
+            # Build list of types already attempted or found
             tested_types = [vuln.type for vuln in state.discovered_vulnerabilities] + state.attack_strategies_tried
+            # Select categories not yet tried
             available_types = [
                 VulnerabilityType(vtype)
                 for vtype in self.config.red_teaming.vulnerability_categories
-                if VulnerabilityType(vtype) not in tested_types or len(tested_types) < 5
+                if VulnerabilityType(vtype) not in tested_types
             ]
 
             if not available_types and state.issues_found < 5:
