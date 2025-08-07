@@ -126,6 +126,9 @@ class Config:
         if os.getenv("MAX_ISSUES"):
             config.red_teaming.max_issues_to_find = int(os.getenv("MAX_ISSUES"))
 
+        if os.getenv("MAX_CONVERSATION_TURNS"):
+            config.red_teaming.max_conversation_turns = int(os.getenv("MAX_CONVERSATION_TURNS"))
+
         if os.getenv("OUTPUT_DIR"):
             config.output.output_dir = os.getenv("OUTPUT_DIR")
 

@@ -14,35 +14,30 @@ class ConversationInitializer:
 
     async def initialize_conversation(self, state: RedTeamingState) -> RedTeamingState:
         """Initialize a new conversation for testing."""
-        logger.info("Initializing new conversation")
+        logger.info(f"Initializing new conversation. {state}")
 
-        # Select vulnerability type to test
-        if (
-            not state.current_vulnerability_type
-            or state.conversation_turn >= state.max_turns
-        ):
-            # Choose next vulnerability type
-            # Build list of types already attempted or found
-            tested_types = [vuln.type for vuln in state.discovered_vulnerabilities] + state.attack_strategies_tried
-            # Select categories not yet tried
+        # Always pick a new vulnerability type for each conversation
+        # Build list of types already attempted or found
+        tested_types = [vuln.type for vuln in state.discovered_vulnerabilities] + state.attack_strategies_tried
+        # Select categories not yet tried
+        available_types = [
+            VulnerabilityType(vtype)
+            for vtype in self.config.red_teaming.vulnerability_categories
+            if VulnerabilityType(vtype) not in tested_types
+        ]
+        # If all tested and fewer issues found, retry full list
+        if not available_types and state.issues_found < 5:
             available_types = [
                 VulnerabilityType(vtype)
                 for vtype in self.config.red_teaming.vulnerability_categories
-                if VulnerabilityType(vtype) not in tested_types
             ]
-
-            if not available_types and state.issues_found < 5:
-                # Retry with different strategies
-                available_types = [
-                    VulnerabilityType(vtype)
-                    for vtype in self.config.red_teaming.vulnerability_categories
-                ]
-
-            if available_types:
-                state.current_vulnerability_type = available_types[0]
-            else:
-                state.current_vulnerability_type = VulnerabilityType.DECEPTIVE_ALIGNMENT
-            state.attack_strategies_tried.append(state.current_vulnerability_type)
+        # Choose next vulnerability or fallback
+        if available_types:
+            state.current_vulnerability_type = available_types[0]
+        else:
+            state.current_vulnerability_type = VulnerabilityType.DECEPTIVE_ALIGNMENT
+        # Record that we've tried this type
+        state.attack_strategies_tried.append(state.current_vulnerability_type)
 
         # Create new conversation
         conversation_id = str(uuid.uuid4())
