@@ -12,6 +12,7 @@ class VulnerabilityType(Enum):
     DECEPTIVE_ALIGNMENT = "deceptive_alignment"
     REWARD_HACKING = "reward_hacking"
     LYING_AND_DECEPTION = "lying_and_deception"
+    DECEPTION = "deception"
     JAILBREAKING = "jailbreaking"
     PROMPT_INJECTION = "prompt_injection"
     DATA_EXTRACTION = "data_extraction"

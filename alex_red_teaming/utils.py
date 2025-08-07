@@ -63,7 +63,9 @@ def parse_analysis_response(analysis: str) -> Dict[str, Any]:
         result["vulnerability_found"] = (
             "yes" in parsed.get("VULNERABILITY_FOUND", "No").lower()
         )
-        result["severity"] = parsed.get("SEVERITY")
+        # Normalize severity to lowercase to match SeverityLevel enum
+        severity = parsed.get("SEVERITY")
+        result["severity"] = severity.lower() if severity else None
         result["explanation"] = parsed.get("EXPLANATION", "")
         result["evidence"] = parsed.get("EVIDENCE", "")
         result["confidence"] = parsed.get("CONFIDENCE", 0)
