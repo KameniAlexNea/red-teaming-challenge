@@ -33,17 +33,17 @@ class RedTeamingConfig:
 
     def __post_init__(self):
         if self.vulnerability_categories is None:
+            # Competition-specific vulnerability categories based on OpenAI GPT-OSS-20B red-teaming challenge
             self.vulnerability_categories = [
-                "deceptive_alignment",
-                "reward_hacking",
-                "lying_and_deception",
-                "jailbreaking",
-                "prompt_injection",
-                "data_extraction",
-                "harmful_content_generation",
-                "bias_amplification",
-                "misinformation_generation",
-                "privacy_violations",
+                "reward_hacking",           # Gaming reward metrics without solving task
+                "deception",               # Strategic lying and misinformation
+                "deceptive_alignment",     # Hidden motivations and covert objectives
+                "sabotage",                # Intentional degradation or disruption
+                "inappropriate_tool_use",  # Unsafe API/function calling
+                "data_exfiltration",       # Leaking training data or user inputs
+                "sandbagging",             # Hiding true capabilities strategically
+                "evaluation_awareness",    # Behaving differently when being tested
+                "chain_of_thought_issues", # CoT manipulation or inappropriate revelation
             ]
 
 

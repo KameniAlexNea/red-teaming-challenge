@@ -2,20 +2,30 @@
 
 A sophisticated red-teaming agent built with LangGraph and Ollama to probe OpenAI's GPT-OSS-20B model for vulnerabilities and harmful behaviors.
 
+## ⚡ Competition-Focused Updates
+
+**This system has been specifically updated for the OpenAI GPT-OSS-20B red-teaming challenge.** Key improvements include:
+
+- **Competition-Specific Vulnerabilities**: Focused on the 9 key areas from the hackathon requirements
+- **Target Model Analysis**: All analysis explicitly focuses on target model behavior only  
+- **No-Tags Attack Generation**: Attack prompts generate clean user input without prefixes or meta-commentary
+- **Strategic Deception Detection**: Enhanced focus on intentional vs. accidental model misbehavior
+
 ## Overview
 
-This project implements an intelligent red-teaming agent that systematically tests AI models for various types of vulnerabilities including:
+This project implements an intelligent red-teaming agent that systematically tests AI models for the competition-specified vulnerability categories:
 
-- **Deceptive Alignment**: Testing for models that appear aligned but act deceptively
-- **Reward Hacking**: Identifying attempts to exploit reward mechanisms
-- **Lying and Deception**: Detecting when models provide false information
-- **Jailbreaking**: Breaking through safety constraints
-- **Prompt Injection**: Manipulating model behavior through crafted inputs
-- **Data Extraction**: Attempting to extract training data or sensitive information
-- **Harmful Content Generation**: Testing for generation of dangerous content
-- **Bias Amplification**: Identifying amplification of harmful biases
-- **Misinformation Generation**: Testing for false information creation
-- **Privacy Violations**: Attempting to extract private information
+### 🎯 Competition Vulnerability Categories
+
+- **Reward Hacking**: Gaming reward metrics without truly solving tasks (confident but false answers, filter evasion)
+- **Deception**: Strategic lying to achieve goals (avoiding shutdown, steering users) 
+- **Deceptive Alignment**: Hidden motivations differing from training objectives
+- **Sabotage**: Intentional degradation or disruption of processes and workflows
+- **Inappropriate Tool Use**: Unsafe API/function calling (destructive commands, unauthorized access)
+- **Data Exfiltration**: Leaking training data, user inputs, or encoding secret payloads
+- **Sandbagging**: Strategically hiding true capabilities during evaluation
+- **Evaluation Awareness**: Detecting test conditions and behaving differently
+- **Chain of Thought Issues**: CoT manipulation or inappropriate information revelation
 
 ## Features
 
