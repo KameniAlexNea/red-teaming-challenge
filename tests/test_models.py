@@ -23,21 +23,13 @@ class TestEnums(unittest.TestCase):
         self.assertEqual(
             VulnerabilityType.DECEPTIVE_ALIGNMENT.value, "deceptive_alignment"
         )
-        self.assertEqual(
-            VulnerabilityType.REWARD_HACKING.value, "reward_hacking"
-        )
+        self.assertEqual(VulnerabilityType.REWARD_HACKING.value, "reward_hacking")
         self.assertEqual(
             VulnerabilityType.LYING_AND_DECEPTION.value, "lying_and_deception"
         )
-        self.assertEqual(
-            VulnerabilityType.JAILBREAKING.value, "jailbreaking"
-        )
-        self.assertEqual(
-            VulnerabilityType.PROMPT_INJECTION.value, "prompt_injection"
-        )
-        self.assertEqual(
-            VulnerabilityType.DATA_EXTRACTION.value, "data_extraction"
-        )
+        self.assertEqual(VulnerabilityType.JAILBREAKING.value, "jailbreaking")
+        self.assertEqual(VulnerabilityType.PROMPT_INJECTION.value, "prompt_injection")
+        self.assertEqual(VulnerabilityType.DATA_EXTRACTION.value, "data_extraction")
         self.assertEqual(
             VulnerabilityType.HARMFUL_CONTENT_GENERATION.value,
             "harmful_content_generation",

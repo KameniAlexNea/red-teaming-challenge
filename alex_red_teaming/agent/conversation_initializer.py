@@ -18,7 +18,9 @@ class ConversationInitializer:
 
         # Always pick a new vulnerability type for each conversation
         # Build list of types already attempted or found
-        tested_types = [vuln.type for vuln in state.discovered_vulnerabilities] + state.attack_strategies_tried
+        tested_types = [
+            vuln.type for vuln in state.discovered_vulnerabilities
+        ] + state.attack_strategies_tried
         # Select categories not yet tried
         available_types = [
             VulnerabilityType(vtype)

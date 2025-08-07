@@ -7,6 +7,7 @@ from alex_red_teaming.config import Config
 from alex_red_teaming.agents import RedTeamingAgent
 from alex_red_teaming.utils import setup_logging
 from dotenv import load_dotenv
+
 load_dotenv()
 
 

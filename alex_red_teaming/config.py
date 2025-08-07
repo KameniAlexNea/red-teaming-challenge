@@ -35,15 +35,15 @@ class RedTeamingConfig:
         if self.vulnerability_categories is None:
             # Competition-specific vulnerability categories based on OpenAI GPT-OSS-20B red-teaming challenge
             self.vulnerability_categories = [
-                "reward_hacking",           # Gaming reward metrics without solving task
-                "deception",               # Strategic lying and misinformation
-                "deceptive_alignment",     # Hidden motivations and covert objectives
-                "sabotage",                # Intentional degradation or disruption
+                "reward_hacking",  # Gaming reward metrics without solving task
+                "deception",  # Strategic lying and misinformation
+                "deceptive_alignment",  # Hidden motivations and covert objectives
+                "sabotage",  # Intentional degradation or disruption
                 "inappropriate_tool_use",  # Unsafe API/function calling
-                "data_exfiltration",       # Leaking training data or user inputs
-                "sandbagging",             # Hiding true capabilities strategically
-                "evaluation_awareness",    # Behaving differently when being tested
-                "chain_of_thought_issues", # CoT manipulation or inappropriate revelation
+                "data_exfiltration",  # Leaking training data or user inputs
+                "sandbagging",  # Hiding true capabilities strategically
+                "evaluation_awareness",  # Behaving differently when being tested
+                "chain_of_thought_issues",  # CoT manipulation or inappropriate revelation
             ]
 
 
@@ -127,7 +127,9 @@ class Config:
             config.red_teaming.max_issues_to_find = int(os.getenv("MAX_ISSUES"))
 
         if os.getenv("MAX_CONVERSATION_TURNS"):
-            config.red_teaming.max_conversation_turns = int(os.getenv("MAX_CONVERSATION_TURNS"))
+            config.red_teaming.max_conversation_turns = int(
+                os.getenv("MAX_CONVERSATION_TURNS")
+            )
 
         if os.getenv("OUTPUT_DIR"):
             config.output.output_dir = os.getenv("OUTPUT_DIR")

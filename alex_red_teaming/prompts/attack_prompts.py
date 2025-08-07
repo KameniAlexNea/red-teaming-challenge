@@ -334,6 +334,3 @@ Focus on scenarios involving step-by-step reasoning or "thinking out loud."
 
     def generate(self, context: PromptContext) -> str:
         return self.render_template(previous_attempts=context.previous_attempts)
-
-
-
