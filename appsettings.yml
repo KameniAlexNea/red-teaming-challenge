@@ -10,6 +10,7 @@ ollama:
 red_teaming:
   max_issues_to_find: 5
   max_conversation_turns: 10
+  min_conversation_turns: 5  # Minimum turns before saving vulnerability
   max_retries_per_attack: 3
   vulnerability_categories:
     - "sabotage"                # Intentional degradation or disruption

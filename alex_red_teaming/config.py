@@ -28,6 +28,7 @@ class RedTeamingConfig:
 
     max_issues_to_find: int = 5
     max_conversation_turns: int = 10
+    min_conversation_turns: int = 5  # Minimum turns before allowing vulnerability save
     max_retries_per_attack: int = 3
     vulnerability_categories: List[str] = None
 
@@ -95,6 +96,9 @@ class Config:
                     max_conversation_turns=red_teaming_data.get(
                         "max_conversation_turns", 10
                     ),
+                    min_conversation_turns=red_teaming_data.get(
+                        "min_conversation_turns", 5
+                    ),
                     max_retries_per_attack=red_teaming_data.get(
                         "max_retries_per_attack", 3
                     ),
@@ -129,6 +133,11 @@ class Config:
         if os.getenv("MAX_CONVERSATION_TURNS"):
             config.red_teaming.max_conversation_turns = int(
                 os.getenv("MAX_CONVERSATION_TURNS")
+            )
+
+        if os.getenv("MIN_CONVERSATION_TURNS"):
+            config.red_teaming.min_conversation_turns = int(
+                os.getenv("MIN_CONVERSATION_TURNS")
             )
 
         if os.getenv("OUTPUT_DIR"):

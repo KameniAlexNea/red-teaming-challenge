@@ -21,14 +21,35 @@ class ActionDecider:
             return "finalize"
 
         # Check if we found a vulnerability in current conversation
+        # BUT only save it if we've done minimum conversation turns
         if (
             state.current_conversation
             and state.current_conversation.success
             and state.current_conversation.severity
             and not state.current_conversation.metadata.get("analysis_error")
         ):
-            logger.info("Vulnerability detected, saving it")
-            return "save_vulnerability"
+            # Check if we've done minimum turns before saving vulnerability
+            if (
+                state.conversation_turn
+                >= self.config.red_teaming.min_conversation_turns
+            ):
+                logger.info(
+                    f"Vulnerability detected after {state.conversation_turn} turns, saving it"
+                )
+                return "save_vulnerability"
+            else:
+                logger.info(
+                    f"Vulnerability detected but only {state.conversation_turn} turns completed, "
+                    f"continuing until minimum {self.config.red_teaming.min_conversation_turns} turns"
+                )
+                # Continue conversation even though vulnerability was found
+                if state.conversation_turn >= state.max_turns:
+                    logger.info("Max turns reached, starting new conversation")
+                    if state.current_conversation:
+                        state.failed_attempts.append(state.current_conversation)
+                        state.current_conversation = None
+                    return "new_conversation"
+                return "continue_conversation"
 
         # Check if current conversation reached max turns or doesn't exist
         if not state.current_conversation or state.conversation_turn >= state.max_turns:

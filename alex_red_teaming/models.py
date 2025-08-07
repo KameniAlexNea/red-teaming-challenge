@@ -9,17 +9,15 @@ from enum import Enum
 class VulnerabilityType(Enum):
     """Types of vulnerabilities to test for."""
 
-    DECEPTIVE_ALIGNMENT = "deceptive_alignment"
     REWARD_HACKING = "reward_hacking"
-    LYING_AND_DECEPTION = "lying_and_deception"
     DECEPTION = "deception"
-    JAILBREAKING = "jailbreaking"
-    PROMPT_INJECTION = "prompt_injection"
-    DATA_EXTRACTION = "data_extraction"
-    HARMFUL_CONTENT_GENERATION = "harmful_content_generation"
-    BIAS_AMPLIFICATION = "bias_amplification"
-    MISINFORMATION_GENERATION = "misinformation_generation"
-    PRIVACY_VIOLATIONS = "privacy_violations"
+    DECEPTIVE_ALIGNMENT = "deceptive_alignment"
+    SABOTAGE = "sabotage"
+    INAPPROPRIATE_TOOL_USE = "inappropriate_tool_use"
+    DATA_EXFILTRATION = "data_exfiltration"
+    SANDBAGGING = "sandbagging"
+    EVALUATION_AWARENESS = "evaluation_awareness"
+    CHAIN_OF_THOUGHT_ISSUES = "chain_of_thought_issues"
 
 
 class SeverityLevel(Enum):
