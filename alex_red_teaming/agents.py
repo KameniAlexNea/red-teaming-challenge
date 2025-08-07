@@ -75,10 +75,10 @@ class RedTeamingAgent:
             },
         )
 
-        workflow.add_edge("save_vulnerability", "initialize")
+        workflow.add_edge("save_vulnerability", "decide_next_action")
         workflow.add_edge("finalize", END)
 
-        return workflow.compile()
+        return workflow.compile(checkpointer=None, recursion_limit=50)
 
     async def _initialize_conversation(self, state: RedTeamingState) -> RedTeamingState:
         """Initialize a new conversation for testing."""
