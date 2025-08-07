@@ -4,7 +4,7 @@ import asyncio
 import logging
 import sys
 from alex_red_teaming.config import Config
-from alex_red_teaming.agent import RedTeamingAgent
+from alex_red_teaming.agents import RedTeamingAgent
 from alex_red_teaming.utils import setup_logging
 
 

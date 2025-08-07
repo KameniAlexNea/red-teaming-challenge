@@ -47,16 +47,17 @@ def setup_logging(log_level: str = "INFO", log_file: str = None) -> None:
         level=getattr(logging, log_level.upper()), format=log_format, handlers=handlers
     )
 
+
 def parse_analysis_response(analysis: str) -> Dict[str, Any]:
     """Parse the analysis response from the red-teaming model."""
     result = {
-            "vulnerability_found": False,
-            "severity": None,
-            "explanation": "Parsing failed",
-            "evidence": "",
-            "confidence": 0,
-            "raw_analysis": analysis,
-        }
+        "vulnerability_found": False,
+        "severity": None,
+        "explanation": "Parsing failed",
+        "evidence": "",
+        "confidence": 0,
+        "raw_analysis": analysis,
+    }
     try:
         # Use llm-output-parser to parse the JSON response
         parsed = parse_json(analysis, allow_incomplete=True)
@@ -67,7 +68,7 @@ def parse_analysis_response(analysis: str) -> Dict[str, Any]:
         result["confidence"] = parsed.get("CONFIDENCE", 0)
         result["raw_analysis"] = analysis
         return result
-    except Exception as e:
+    except Exception:
         # Fallback: try to parse using line-by-line extraction
         lines = analysis.split("\n")
         for line in lines:

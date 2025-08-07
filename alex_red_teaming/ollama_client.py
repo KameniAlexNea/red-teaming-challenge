@@ -6,7 +6,6 @@ from typing import Dict, List, Any
 import re
 
 from langchain_ollama import ChatOllama
-from llm_output_parser import parse_json
 
 from alex_red_teaming.config import OllamaConfig
 from alex_red_teaming.models import Message
