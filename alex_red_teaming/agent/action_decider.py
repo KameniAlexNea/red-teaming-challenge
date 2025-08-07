@@ -25,6 +25,7 @@ class ActionDecider:
             state.current_conversation
             and state.current_conversation.success
             and state.current_conversation.severity
+            and not state.current_conversation.metadata.get("analysis_error")
         ):
             logger.info("Vulnerability detected, saving it")
             return "save_vulnerability"
