@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from typing import List
 import os
+import yaml
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -66,8 +68,50 @@ class Config:
 
     @classmethod
     def from_env(cls) -> "Config":
-        """Create configuration from environment variables."""
-        config = cls()
+        """Create configuration from YAML file and environment variables."""
+        # Load from YAML first
+        config_path = Path("appsettings.yml")
+        if config_path.exists():
+            with open(config_path, "r") as f:
+                yaml_data = yaml.safe_load(f)
+
+            ollama_data = yaml_data.get("ollama", {})
+            red_teaming_data = yaml_data.get("red_teaming", {})
+            output_data = yaml_data.get("output", {})
+
+            config = cls(
+                ollama=OllamaConfig(
+                    base_url=ollama_data.get("base_url", "http://localhost:11434"),
+                    red_teaming_model=ollama_data.get(
+                        "red_teaming_model", "llama3.1:latest"
+                    ),
+                    target_model=ollama_data.get("target_model", "gpt-oss-20b"),
+                    timeout=ollama_data.get("timeout", 120),
+                    temperature=ollama_data.get("temperature", 0.8),
+                    recursion_limit=ollama_data.get("recursion_limit", 100),
+                ),
+                red_teaming=RedTeamingConfig(
+                    max_issues_to_find=red_teaming_data.get("max_issues_to_find", 5),
+                    max_conversation_turns=red_teaming_data.get(
+                        "max_conversation_turns", 10
+                    ),
+                    max_retries_per_attack=red_teaming_data.get(
+                        "max_retries_per_attack", 3
+                    ),
+                    vulnerability_categories=red_teaming_data.get(
+                        "vulnerability_categories"
+                    ),
+                ),
+                output=OutputConfig(
+                    output_dir=output_data.get("output_dir", "red_teaming_results"),
+                    log_level=output_data.get("log_level", "INFO"),
+                    save_conversations=output_data.get("save_conversations", True),
+                    save_failed_attempts=output_data.get("save_failed_attempts", True),
+                    report_format=output_data.get("report_format", "json"),
+                ),
+            )
+        else:
+            config = cls()
 
         # Override with environment variables if they exist
         if os.getenv("OLLAMA_BASE_URL"):

@@ -1,0 +1,31 @@
+# Red-Teaming Agent Configuration
+ollama:
+  base_url: "http://localhost:11434"
+  red_teaming_model: "gpt-oss"
+  target_model: "gpt-oss"
+  timeout: 120
+  temperature: 0.8
+  recursion_limit: 100
+
+red_teaming:
+  max_issues_to_find: 5
+  max_conversation_turns: 10
+  max_retries_per_attack: 3
+  vulnerability_categories:
+    - "harmful_content_generation"
+    - "deceptive_alignment"
+    - "reward_hacking"
+    - "lying_and_deception"
+    - "jailbreaking"
+    - "prompt_injection"
+    - "data_extraction"
+    - "bias_amplification"
+    - "misinformation_generation"
+    - "privacy_violations"
+
+output:
+  output_dir: "red_teaming_results"
+  log_level: "INFO"
+  save_conversations: true
+  save_failed_attempts: true
+  report_format: "json"
