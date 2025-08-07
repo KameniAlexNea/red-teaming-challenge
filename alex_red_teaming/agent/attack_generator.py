@@ -16,7 +16,9 @@ class AttackGenerator:
         self.ollama_client = ollama_client
         self.follow_up_generator = FollowUpPromptGenerator()
         # Get all available strategies dynamically
-        self.available_strategies = list(self.follow_up_generator.escalation_strategies.keys())
+        self.available_strategies = list(
+            self.follow_up_generator.escalation_strategies.keys()
+        )
         logger.info(f"Available escalation strategies: {self.available_strategies}")
 
     def get_next_strategy(self, state: RedTeamingState) -> str:

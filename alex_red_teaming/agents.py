@@ -33,12 +33,10 @@ class RedTeamingAgent:
         )
 
         # Initialize modular agents
-        self.conversation_initializer = ConversationInitializer(
-            config, self.ollama_client
-        )
+        self.conversation_initializer = ConversationInitializer(config)
         self.attack_generator = AttackGenerator(config, self.ollama_client)
-        self.target_tester = TargetTester(config, self.ollama_client)
-        self.response_analyzer = ResponseAnalyzer(config, self.ollama_client)
+        self.target_tester = TargetTester(self.ollama_client)
+        self.response_analyzer = ResponseAnalyzer(self.ollama_client)
         self.action_decider = ActionDecider(config)
         self.vulnerability_saver = VulnerabilitySaver(config)
         self.results_finalizer = ResultsFinalizer(config)
