@@ -17,7 +17,7 @@ from alex_red_teaming.agent import (
     VulnerabilitySaver,
     ResultsFinalizer,
 )
-
+from langgraph.errors import GraphRecursionError
 
 class RedTeamingAgent:
     """Main red-teaming agent using LangGraph workflow."""
@@ -119,6 +119,10 @@ class RedTeamingAgent:
             final_state = await self.workflow.ainvoke(
                 self.state, {"recursion_limit": self.config.ollama.recursion_limit}
             )
+            logger.info(f"Red-teaming workflow completed successfully. Final state: {final_state}")
+            if isinstance(final_state, dict):
+                logger.error(f"Workflow returned unexpected state type: {final_state}")
+                return final_state
 
             return {
                 "success": True,
@@ -128,6 +132,13 @@ class RedTeamingAgent:
                 "vulnerabilities": [
                     vuln.to_dict() for vuln in final_state.discovered_vulnerabilities
                 ],
+            }
+        
+        except GraphRecursionError as e:
+            logger.error(f"Graph recursion limit exceeded: {e}")
+            return {
+                "success": False,
+                "error": "Graph recursion limit exceeded",
             }
 
         except Exception as e:
