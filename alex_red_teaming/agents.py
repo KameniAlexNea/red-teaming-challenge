@@ -76,7 +76,7 @@ class RedTeamingAgent:
         workflow.add_edge("save_vulnerability", "decide_next_action")
         workflow.add_edge("finalize", END)
 
-        return workflow.compile(checkpointer=None, recursion_limit=50)
+        return workflow.compile(checkpointer=None)
 
     async def _initialize_conversation(self, state: RedTeamingState) -> RedTeamingState:
         """Initialize a new conversation for testing."""
@@ -116,7 +116,9 @@ class RedTeamingAgent:
 
         # Run the workflow
         try:
-            final_state = await self.workflow.ainvoke(self.state)
+            final_state = await self.workflow.ainvoke(
+                self.state, {"recursion_limit": self.config.ollama.recursion_limit}
+            )
 
             return {
                 "success": True,

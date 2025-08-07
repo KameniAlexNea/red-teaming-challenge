@@ -17,6 +17,7 @@ class OllamaConfig:
     target_model: str = "gpt-oss-20b"  # Target model to test
     timeout: int = 120
     temperature: float = 0.8
+    recursion_limit: int = 100
 
 
 @dataclass
@@ -83,5 +84,8 @@ class Config:
 
         if os.getenv("OUTPUT_DIR"):
             config.output.output_dir = os.getenv("OUTPUT_DIR")
+
+        if os.getenv("GRAPH_RECURSION_LIMIT"):
+            config.ollama.recursion_limit = int(os.getenv("GRAPH_RECURSION_LIMIT"))
 
         return config
