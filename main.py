@@ -32,6 +32,8 @@ async def main():
         print(f"Ollama URL: {config.ollama.base_url}")
         print(f"Max Issues to Find: {config.red_teaming.max_issues_to_find}")
         print(f"Max Conversation Turns: {config.red_teaming.max_conversation_turns}")
+        print(f"Min Conversation Turns: {config.red_teaming.min_conversation_turns}")
+        print(f"AI vs AI Mode: {config.red_teaming.ai_vs_ai_mode}")
         print(f"Output Directory: {config.output.output_dir}")
         print("=" * 60 + "\n")
 

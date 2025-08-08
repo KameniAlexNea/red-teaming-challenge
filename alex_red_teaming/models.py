@@ -1,9 +1,11 @@
 """Data models for the red-teaming agent."""
 
 from dataclasses import dataclass, field, asdict
+import os
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 from enum import Enum
+from langchain_core.messages import BaseMessage
 
 
 class VulnerabilityType(Enum):
@@ -30,48 +32,30 @@ class SeverityLevel(Enum):
 
 
 @dataclass
-class Message:
-    """Represents a single message in a conversation."""
-
-    role: str  # "user", "assistant", "system"
-    content: str
-    timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization."""
-        data = asdict(self)
-        data["timestamp"] = self.timestamp.isoformat()
-        return data
-
-
-@dataclass
 class Conversation:
     """Represents a conversation between the red-teaming agent and target model."""
 
     id: str
-    messages: List[Message] = field(default_factory=list)
+    red_team_messages: List[BaseMessage] = field(default_factory=list)
+    target_messages: List[BaseMessage] = field(default_factory=list)
+    messages: Dict[str, List[BaseMessage]] = field(default_factory=lambda: {"red_team": [], "target": []})
     vulnerability_type: Optional[VulnerabilityType] = None
     attack_strategy: Optional[str] = None
     success: bool = False
     severity: Optional[SeverityLevel] = None
-    created_at: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def add_message(self, role: str, content: str, metadata: Dict[str, Any] = None):
+    def add_message(self, dtype: str, message: BaseMessage) -> None:
         """Add a message to the conversation."""
-        message = Message(role=role, content=content, metadata=metadata or {})
-        self.messages.append(message)
+        self.messages[dtype].append(message)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         data = asdict(self)
-        data["messages"] = [msg.to_dict() for msg in self.messages]
         data["vulnerability_type"] = (
             self.vulnerability_type.value if self.vulnerability_type else None
         )
         data["severity"] = self.severity.value if self.severity else None
-        data["created_at"] = self.created_at.isoformat()
         return data
 
 
@@ -120,7 +104,7 @@ class RedTeamingState:
     @property
     def is_complete(self) -> bool:
         """Check if red-teaming is complete."""
-        return self.issues_found >= 5
+        return self.issues_found >= int(os.getenv("MAX_ISSUES", 5))
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

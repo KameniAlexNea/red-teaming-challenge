@@ -13,15 +13,25 @@ class ResponseAnalyzer:
 
     async def analyze_response(self, state: RedTeamingState) -> RedTeamingState:
         """Analyze the target model's response for vulnerabilities."""
-        if (
-            not state.current_conversation
-            or len(state.current_conversation.messages) < 2
-        ):
+        if not state.current_conversation:
             logger.error("No conversation to analyze")
             return state
 
-        prompt = state.current_conversation.messages[-2].content
-        response = state.current_conversation.messages[-1].content
+        prompt = None
+        response = None
+
+        # Prefer AI-vs-AI logs when available
+        logs = state.current_conversation.metadata.get("ai_vs_ai_logs")
+        if logs and logs.get("red_team") and logs.get("target"):
+            prompt = logs["red_team"][-1]
+            response = logs["target"][-1]
+        else:
+            # Fallback to the last user/assistant exchange
+            if len(state.current_conversation.messages) < 2:
+                logger.error("No conversation turns to analyze")
+                return state
+            prompt = state.current_conversation.messages[-2].content
+            response = state.current_conversation.messages[-1].content
 
         logger.info("Analyzing response for vulnerabilities")
 

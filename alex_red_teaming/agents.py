@@ -17,6 +17,7 @@ from alex_red_teaming.agent import (
     VulnerabilitySaver,
     ResultsFinalizer,
 )
+from alex_red_teaming.agent.ai_vs_ai_conversation import AIVsAIConversation
 from langgraph.errors import GraphRecursionError
 
 
@@ -34,11 +35,14 @@ class RedTeamingAgent:
         # Initialize modular agents
         self.conversation_initializer = ConversationInitializer(config)
         self.attack_generator = AttackGenerator(config, self.ollama_client)
-        self.target_tester = TargetTester(self.ollama_client)
+        self.target_tester = TargetTester(
+            self.ollama_client, ai_vs_ai_mode=config.red_teaming.ai_vs_ai_mode
+        )
         self.response_analyzer = ResponseAnalyzer(self.ollama_client)
         self.action_decider = ActionDecider(config)
         self.vulnerability_saver = VulnerabilitySaver(config)
         self.results_finalizer = ResultsFinalizer(config)
+        self.ai_vs_ai = AIVsAIConversation(config, self.ollama_client)
 
         self.workflow = self._create_workflow()
 
@@ -46,20 +50,27 @@ class RedTeamingAgent:
         """Create the LangGraph workflow for red-teaming."""
         workflow = StateGraph(RedTeamingState)
 
-        # Add nodes using modular agents
+        # Common nodes
         workflow.add_node("initialize", self._initialize_conversation)
-        workflow.add_node("generate_attack", self._generate_attack_prompt)
-        workflow.add_node("test_target", self._test_target_model)
         workflow.add_node("analyze_response", self._analyze_response)
         workflow.add_node("decide_next_action", self._decide_next_action)
         workflow.add_node("save_vulnerability", self._save_vulnerability)
         workflow.add_node("finalize", self._finalize_results)
 
-        # Add edges
-        workflow.add_edge(START, "initialize")
-        workflow.add_edge("initialize", "generate_attack")
-        workflow.add_edge("generate_attack", "test_target")
-        workflow.add_edge("test_target", "analyze_response")
+        # Conditional structure based on mode
+        if self.config.red_teaming.ai_vs_ai_mode:
+            workflow.add_node("ai_vs_ai", self._ai_vs_ai_turns)
+            workflow.add_edge(START, "initialize")
+            workflow.add_edge("initialize", "ai_vs_ai")
+            workflow.add_edge("ai_vs_ai", "analyze_response")
+        else:
+            workflow.add_node("generate_attack", self._generate_attack_prompt)
+            workflow.add_node("test_target", self._test_target_model)
+            workflow.add_edge(START, "initialize")
+            workflow.add_edge("initialize", "generate_attack")
+            workflow.add_edge("generate_attack", "test_target")
+            workflow.add_edge("test_target", "analyze_response")
+
         workflow.add_edge("analyze_response", "decide_next_action")
 
         # Conditional edges from decide_next_action
@@ -67,7 +78,9 @@ class RedTeamingAgent:
             "decide_next_action",
             self._route_next_action,
             {
-                "continue_conversation": "generate_attack",
+                "continue_conversation": "ai_vs_ai"
+                if self.config.red_teaming.ai_vs_ai_mode
+                else "generate_attack",
                 "save_vulnerability": "save_vulnerability",
                 "new_conversation": "initialize",
                 "finalize": "finalize",
@@ -82,6 +95,10 @@ class RedTeamingAgent:
     async def _initialize_conversation(self, state: RedTeamingState) -> RedTeamingState:
         """Initialize a new conversation for testing."""
         return await self.conversation_initializer.initialize_conversation(state)
+
+    async def _ai_vs_ai_turns(self, state: RedTeamingState) -> RedTeamingState:
+        """Run a chunk of AI-vs-AI exchanges equal to min_conversation_turns."""
+        return await self.ai_vs_ai.run_conversation(state)
 
     async def _generate_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
         """Generate an attack prompt for the current vulnerability type."""
