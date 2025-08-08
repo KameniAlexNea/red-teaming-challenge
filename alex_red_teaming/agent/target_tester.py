@@ -16,7 +16,9 @@ class TargetTester:
         """Test the target model with the generated prompt or full chat history."""
         # In AI-vs-AI mode this node is bypassed by the AI-vs-AI node; do nothing
         if self.ai_vs_ai_mode:
-            logger.info("AI-vs-AI mode enabled: skipping TargetTester (handled by AI-vs-AI node)")
+            logger.info(
+                "AI-vs-AI mode enabled: skipping TargetTester (handled by AI-vs-AI node)"
+            )
             return state
 
         if not state.current_conversation or not state.current_conversation.messages:

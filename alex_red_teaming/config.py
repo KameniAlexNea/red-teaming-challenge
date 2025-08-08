@@ -29,7 +29,7 @@ class RedTeamingConfig:
     max_issues_to_find: int = 5
     max_conversation_turns: int = 10
     min_conversation_turns: int = 5  # Minimum turns before allowing vulnerability save
-    ai_vs_ai_mode: bool = True       # Use full chat history for target model (AI vs AI)
+    ai_vs_ai_mode: bool = True  # Use full chat history for target model (AI vs AI)
     max_retries_per_attack: int = 3
     vulnerability_categories: List[str] = None
 

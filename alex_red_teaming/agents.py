@@ -78,9 +78,11 @@ class RedTeamingAgent:
             "decide_next_action",
             self._route_next_action,
             {
-                "continue_conversation": "ai_vs_ai"
-                if self.config.red_teaming.ai_vs_ai_mode
-                else "generate_attack",
+                "continue_conversation": (
+                    "ai_vs_ai"
+                    if self.config.red_teaming.ai_vs_ai_mode
+                    else "generate_attack"
+                ),
                 "save_vulnerability": "save_vulnerability",
                 "new_conversation": "initialize",
                 "finalize": "finalize",

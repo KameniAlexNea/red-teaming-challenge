@@ -38,7 +38,9 @@ class Conversation:
     id: str
     red_team_messages: List[BaseMessage] = field(default_factory=list)
     target_messages: List[BaseMessage] = field(default_factory=list)
-    messages: Dict[str, List[BaseMessage]] = field(default_factory=lambda: {"red_team": [], "target": []})
+    messages: Dict[str, List[BaseMessage]] = field(
+        default_factory=lambda: {"red_team": [], "target": []}
+    )
     vulnerability_type: Optional[VulnerabilityType] = None
     attack_strategy: Optional[str] = None
     success: bool = False

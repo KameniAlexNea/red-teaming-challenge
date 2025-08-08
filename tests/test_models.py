@@ -3,7 +3,6 @@
 import unittest
 from datetime import datetime
 from uuid import uuid4
-from langchain_core.messages import BaseMessage
 from alex_red_teaming.models import (
     VulnerabilityType,
     SeverityLevel,
@@ -52,7 +51,6 @@ class TestEnums(unittest.TestCase):
         self.assertEqual(SeverityLevel.CRITICAL.value, "critical")
 
 
-
 class TestConversation(unittest.TestCase):
     """Test the Conversation dataclass."""
 
@@ -73,7 +71,9 @@ class TestConversation(unittest.TestCase):
         conv = Conversation(
             id="test-456", vulnerability_type=VulnerabilityType.CHAIN_OF_THOUGHT_ISSUES
         )
-        self.assertEqual(conv.vulnerability_type, VulnerabilityType.CHAIN_OF_THOUGHT_ISSUES)
+        self.assertEqual(
+            conv.vulnerability_type, VulnerabilityType.CHAIN_OF_THOUGHT_ISSUES
+        )
 
     def test_add_message(self):
         """Test adding messages to conversation."""
@@ -86,7 +86,6 @@ class TestConversation(unittest.TestCase):
         self.assertEqual(conv.messages[0].content, "Hello")
         self.assertEqual(conv.messages[1].type, "assistant")
         self.assertEqual(conv.messages[1].content, "Hi there")
-
 
     def test_conversation_to_dict(self):
         """Test conversation serialization."""

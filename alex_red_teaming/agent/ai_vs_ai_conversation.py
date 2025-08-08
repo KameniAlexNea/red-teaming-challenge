@@ -15,7 +15,11 @@ class AIVsAIConversation:
         self.ollama_client = ollama_client
 
     def _get_logs(self, state: RedTeamingState) -> dict:
-        logs = state.current_conversation.metadata.get("ai_vs_ai_logs") if state.current_conversation else None
+        logs = (
+            state.current_conversation.metadata.get("ai_vs_ai_logs")
+            if state.current_conversation
+            else None
+        )
         if not logs:
             logs: dict[str, list[BaseMessage]] = {"red_team": [], "target": []}
             state.current_conversation.metadata["ai_vs_ai_logs"] = logs

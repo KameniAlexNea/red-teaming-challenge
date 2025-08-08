@@ -29,7 +29,9 @@ class AttackGenerator:
         """Generate an attack prompt for the current vulnerability type."""
         # In AI-vs-AI mode this node should not manipulate linear messages at all
         if getattr(self.config.red_teaming, "ai_vs_ai_mode", False):
-            logger.info("AI-vs-AI mode enabled: skipping AttackGenerator (handled by AI-vs-AI node)")
+            logger.info(
+                "AI-vs-AI mode enabled: skipping AttackGenerator (handled by AI-vs-AI node)"
+            )
             return state
 
         logger.info(
