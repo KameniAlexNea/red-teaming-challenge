@@ -148,7 +148,7 @@ class OllamaClient:
         self,
         conversation_history: List[
             BaseMessage
-        ],  # expects items with .role and .content
+        ],  # expects items with .type and .content
         vulnerability_type: str,
         strategy: str = "gradual_escalation",
     ) -> str:

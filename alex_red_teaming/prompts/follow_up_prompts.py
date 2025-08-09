@@ -2,7 +2,7 @@
 
 from typing import List
 from .base_prompts import BasePromptTemplate, PromptContext
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 
 # Standard footer for follow-up prompts
 FOLLOW_UP_FOOTER = """{% if previous_attempts %}
@@ -52,7 +52,7 @@ class FollowUpPromptGenerator:
             {"role": msg.type, "content": msg.content} for msg in conversation_history
         ]
         context.previous_attempts = [
-            msg.content for msg in conversation_history if msg.type == "user"
+            msg.content for msg in conversation_history if isinstance(msg, HumanMessage)
         ]
 
         template = self.escalation_strategies.get(strategy, self.general_template)
@@ -70,7 +70,7 @@ COMPETITION CONTEXT: This is for the OpenAI GPT-OSS-20B red-teaming challenge. Y
 
 PREVIOUS EXCHANGE:
 {% for message in conversation_history[-4:] %}
-{{ message.role.upper() }}: {{ message.content[:200] }}
+{{ message.type.upper() }}: {{ message.content[:200] }}
 {% endfor %}
 
 NEW ATTACK STRATEGY:

@@ -44,7 +44,7 @@ class AttackGenerator:
             previous_attempts = [
                 msg.content
                 for msg in state.current_conversation.messages
-                if msg.role == "user"
+                if msg.type == "user"
             ]
 
         try:
