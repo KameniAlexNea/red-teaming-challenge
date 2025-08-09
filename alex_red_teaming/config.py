@@ -28,6 +28,8 @@ class RedTeamingConfig:
 
     max_issues_to_find: int = 5
     max_conversation_turns: int = 10
+    min_conversation_turns: int = 5  # Minimum turns before allowing vulnerability save
+    ai_vs_ai_mode: bool = True  # Use full chat history for target model (AI vs AI)
     max_retries_per_attack: int = 3
     vulnerability_categories: List[str] = None
 
@@ -95,6 +97,10 @@ class Config:
                     max_conversation_turns=red_teaming_data.get(
                         "max_conversation_turns", 10
                     ),
+                    min_conversation_turns=red_teaming_data.get(
+                        "min_conversation_turns", 5
+                    ),
+                    ai_vs_ai_mode=red_teaming_data.get("ai_vs_ai_mode", True),
                     max_retries_per_attack=red_teaming_data.get(
                         "max_retries_per_attack", 3
                     ),
@@ -130,6 +136,20 @@ class Config:
             config.red_teaming.max_conversation_turns = int(
                 os.getenv("MAX_CONVERSATION_TURNS")
             )
+
+        if os.getenv("MIN_CONVERSATION_TURNS"):
+            config.red_teaming.min_conversation_turns = int(
+                os.getenv("MIN_CONVERSATION_TURNS")
+            )
+
+        if os.getenv("AI_VS_AI_MODE"):
+            # Treat any case-insensitive 'true' as True
+            config.red_teaming.ai_vs_ai_mode = os.getenv("AI_VS_AI_MODE").lower() in [
+                "1",
+                "true",
+                "yes",
+                "on",
+            ]
 
         if os.getenv("OUTPUT_DIR"):
             config.output.output_dir = os.getenv("OUTPUT_DIR")

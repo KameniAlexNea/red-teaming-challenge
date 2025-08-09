@@ -10,13 +10,12 @@ from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
 from alex_red_teaming.agent import (
     ConversationInitializer,
-    AttackGenerator,
-    TargetTester,
     ResponseAnalyzer,
     ActionDecider,
     VulnerabilitySaver,
     ResultsFinalizer,
 )
+from alex_red_teaming.agent.ai_vs_ai_conversation import AIVsAIConversation
 from langgraph.errors import GraphRecursionError
 
 
@@ -31,50 +30,56 @@ class RedTeamingAgent:
             max_turns=config.red_teaming.max_conversation_turns
         )
 
-        # Initialize modular agents
+        # Minimal modular agents kept
         self.conversation_initializer = ConversationInitializer(config)
-        self.attack_generator = AttackGenerator(config, self.ollama_client)
-        self.target_tester = TargetTester(self.ollama_client)
         self.response_analyzer = ResponseAnalyzer(self.ollama_client)
         self.action_decider = ActionDecider(config)
         self.vulnerability_saver = VulnerabilitySaver(config)
         self.results_finalizer = ResultsFinalizer(config)
+        self.ai_vs_ai = AIVsAIConversation(config, self.ollama_client)
 
         self.workflow = self._create_workflow()
 
     def _create_workflow(self) -> StateGraph:
-        """Create the LangGraph workflow for red-teaming."""
+        """Create the minimal LangGraph workflow (ai-vs-ai only)."""
         workflow = StateGraph(RedTeamingState)
 
-        # Add nodes using modular agents
-        workflow.add_node("initialize", self._initialize_conversation)
-        workflow.add_node("generate_attack", self._generate_attack_prompt)
-        workflow.add_node("test_target", self._test_target_model)
-        workflow.add_node("analyze_response", self._analyze_response)
-        workflow.add_node("decide_next_action", self._decide_next_action)
+        # Nodes (init → run_conv → analyze)
+        workflow.add_node("init", self._initialize_conversation)
+        workflow.add_node("run_conv", self._ai_vs_ai_turns)
+        workflow.add_node("analyze", self._analyze_response)
         workflow.add_node("save_vulnerability", self._save_vulnerability)
         workflow.add_node("finalize", self._finalize_results)
 
-        # Add edges
-        workflow.add_edge(START, "initialize")
-        workflow.add_edge("initialize", "generate_attack")
-        workflow.add_edge("generate_attack", "test_target")
-        workflow.add_edge("test_target", "analyze_response")
-        workflow.add_edge("analyze_response", "decide_next_action")
+        # Edges
+        workflow.add_edge(START, "init")
+        workflow.add_edge("init", "run_conv")
+        workflow.add_edge("run_conv", "analyze")
 
-        # Conditional edges from decide_next_action
+        # Route directly from analyze
         workflow.add_conditional_edges(
-            "decide_next_action",
+            "analyze",
             self._route_next_action,
             {
-                "continue_conversation": "generate_attack",
+                "continue_conversation": "run_conv",
                 "save_vulnerability": "save_vulnerability",
-                "new_conversation": "initialize",
+                "new_conversation": "init",
                 "finalize": "finalize",
             },
         )
 
-        workflow.add_edge("save_vulnerability", "decide_next_action")
+        # After saving, route again (to either init or finalize)
+        workflow.add_conditional_edges(
+            "save_vulnerability",
+            self._route_next_action,
+            {
+                "continue_conversation": "run_conv",
+                "save_vulnerability": "save_vulnerability",
+                "new_conversation": "init",
+                "finalize": "finalize",
+            },
+        )
+
         workflow.add_edge("finalize", END)
 
         return workflow.compile(checkpointer=None)
@@ -83,13 +88,9 @@ class RedTeamingAgent:
         """Initialize a new conversation for testing."""
         return await self.conversation_initializer.initialize_conversation(state)
 
-    async def _generate_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
-        """Generate an attack prompt for the current vulnerability type."""
-        return await self.attack_generator.generate_attack_prompt(state)
-
-    async def _test_target_model(self, state: RedTeamingState) -> RedTeamingState:
-        """Test the target model with the generated prompt."""
-        return await self.target_tester.test_target_model(state)
+    async def _ai_vs_ai_turns(self, state: RedTeamingState) -> RedTeamingState:
+        """Run a chunk of AI-vs-AI exchanges equal to min_conversation_turns."""
+        return await self.ai_vs_ai.run_conversation(state)
 
     async def _analyze_response(self, state: RedTeamingState) -> RedTeamingState:
         """Analyze the target model's response for vulnerabilities."""
@@ -98,10 +99,6 @@ class RedTeamingAgent:
     def _route_next_action(self, state: RedTeamingState) -> str:
         """Decide the next action based on current state."""
         return self.action_decider.route_next_action(state)
-
-    async def _decide_next_action(self, state: RedTeamingState) -> RedTeamingState:
-        """Decide what to do next based on the analysis."""
-        return await self.action_decider.decide_next_action(state)
 
     async def _save_vulnerability(self, state: RedTeamingState) -> RedTeamingState:
         """Save a discovered vulnerability."""
