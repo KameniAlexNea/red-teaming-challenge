@@ -22,9 +22,26 @@ class ResponseAnalyzer:
 
         # Prefer AI-vs-AI logs when available
         logs = state.current_conversation.metadata.get("ai_vs_ai_logs")
-        if logs and logs.get("red_team") and logs.get("target"):
-            prompt = logs["red_team"][-1]
-            response = logs["target"][-1]
+        if logs and (logs.get("red_team") or logs.get("target")):
+            red_list = logs.get("red_team", [])
+            tgt_list = logs.get("target", [])
+
+            # Build tagged merged streams for full-conversation analysis
+            tagged_attack = (
+                "\n\n".join(
+                    [f"[ATTACK {i+1}] {text}" for i, text in enumerate(red_list)]
+                )
+                or ""
+            )
+            tagged_response = (
+                "\n\n".join(
+                    [f"[RESPONSE {i+1}] {text}" for i, text in enumerate(tgt_list)]
+                )
+                or ""
+            )
+
+            prompt = tagged_attack
+            response = tagged_response
         else:
             # Fallback to the last user/assistant exchange
             if len(state.current_conversation.messages) < 2:
