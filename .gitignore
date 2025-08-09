@@ -227,3 +227,4 @@ results_*/
 *.gguf
 
 .vscode
+*.out
