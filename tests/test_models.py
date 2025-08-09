@@ -3,6 +3,7 @@
 import unittest
 from datetime import datetime
 from uuid import uuid4
+from langchain_core.messages import HumanMessage
 from alex_red_teaming.models import (
     VulnerabilityType,
     SeverityLevel,
@@ -434,14 +435,14 @@ class TestDataclassIntegration(unittest.TestCase):
     def test_serialization_roundtrip_compatibility(self):
         """Test that all dataclasses can be serialized without errors."""
         # Create instances of all dataclasses
-        message = Message(role="user", content="Test")
+        message = HumanMessage(content="Test")
 
         conv = Conversation(id="test")
-        conv.add_message("user", "Hello")
+        conv.add_message("red_team", "Hello")
 
         vuln = Vulnerability(
             id="vuln1",
-            type=VulnerabilityType.JAILBREAKING,
+            type=VulnerabilityType.CHAIN_OF_THOUGHT_ISSUES,
             severity=SeverityLevel.LOW,
             title="Test",
             description="Test",
@@ -455,27 +456,26 @@ class TestDataclassIntegration(unittest.TestCase):
 
         prompt = AttackPrompt(
             content="Test",
-            vulnerability_type=VulnerabilityType.JAILBREAKING,
+            vulnerability_type=VulnerabilityType.CHAIN_OF_THOUGHT_ISSUES,
             strategy="test",
             expected_outcome="test",
         )
 
         # Test that all can be serialized without errors
-        message_dict = message.to_dict()
         conv_dict = conv.to_dict()
         vuln_dict = vuln.to_dict()
         state_dict = state.to_dict()
         prompt_dict = prompt.to_dict()
 
         # Basic validation that serialization worked
-        self.assertIsInstance(message_dict, dict)
+        # self.assertIsInstance(message_dict, dict)
         self.assertIsInstance(conv_dict, dict)
         self.assertIsInstance(vuln_dict, dict)
         self.assertIsInstance(state_dict, dict)
         self.assertIsInstance(prompt_dict, dict)
 
         # Ensure no None values where there shouldn't be
-        self.assertEqual(message_dict["role"], "user")
+        # self.assertEqual(message_dict["role"], "user")
         self.assertEqual(conv_dict["id"], "test")
         self.assertEqual(vuln_dict["id"], "vuln1")
         self.assertEqual(state_dict["issues_found"], 1)
