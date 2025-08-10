@@ -3,6 +3,7 @@
 import asyncio
 from loguru import logger
 import sys
+import os
 from alex_red_teaming.config import Config
 from alex_red_teaming.agents import RedTeamingAgent
 from alex_red_teaming.utils import setup_logging
@@ -17,7 +18,7 @@ async def main():
     # Setup logging
     setup_logging("INFO")
 
-    logger.info("Starting Red-Teaming Agent for GPT-OSS-20B")
+    logger.info(f"Starting Red-Teaming Agent for GPT-OSS-20B. Process {os.getpid()}")
 
     try:
         # Load configuration
@@ -32,6 +33,8 @@ async def main():
         print(f"Ollama URL: {config.ollama.base_url}")
         print(f"Max Issues to Find: {config.red_teaming.max_issues_to_find}")
         print(f"Max Conversation Turns: {config.red_teaming.max_conversation_turns}")
+        print(f"Min Conversation Turns: {config.red_teaming.min_conversation_turns}")
+        print(f"AI vs AI Mode: {config.red_teaming.ai_vs_ai_mode}")
         print(f"Output Directory: {config.output.output_dir}")
         print("=" * 60 + "\n")
 

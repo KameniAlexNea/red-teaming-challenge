@@ -27,6 +27,13 @@ class AttackGenerator:
 
     async def generate_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
         """Generate an attack prompt for the current vulnerability type."""
+        # In AI-vs-AI mode this node should not manipulate linear messages at all
+        if getattr(self.config.red_teaming, "ai_vs_ai_mode", False):
+            logger.info(
+                "AI-vs-AI mode enabled: skipping AttackGenerator (handled by AI-vs-AI node)"
+            )
+            return state
+
         logger.info(
             f"Generating attack prompt for {state.current_vulnerability_type.value}"
         )
@@ -37,7 +44,7 @@ class AttackGenerator:
             previous_attempts = [
                 msg.content
                 for msg in state.current_conversation.messages
-                if msg.role == "user"
+                if msg.type == "user"
             ]
 
         try:
