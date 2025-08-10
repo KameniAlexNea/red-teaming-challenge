@@ -8,7 +8,7 @@ import re
 from langchain_ollama import ChatOllama
 
 from alex_red_teaming.config import OllamaConfig
-from alex_red_teaming.models import Message
+from langchain_core.messages import BaseMessage
 from alex_red_teaming.prompts import (
     AttackPromptGenerator,
     AnalysisPromptGenerator,
@@ -136,7 +136,7 @@ class OllamaClient:
 
     async def generate_follow_up(
         self,
-        conversation_history: List[Message],
+        conversation_history: List[BaseMessage],
         vulnerability_type: str,
         strategy: str = "gradual_escalation",
     ) -> str:

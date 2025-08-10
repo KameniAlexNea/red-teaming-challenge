@@ -4,6 +4,7 @@ from loguru import logger
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
 from alex_red_teaming.prompts.follow_up_prompts import FollowUpPromptGenerator
+from langchain_core.messages import HumanMessage
 
 
 class AttackGenerator:
@@ -37,7 +38,7 @@ class AttackGenerator:
             previous_attempts = [
                 msg.content
                 for msg in state.current_conversation.messages
-                if msg.role == "user"
+                if msg.type == "user"
             ]
 
         try:
@@ -57,7 +58,7 @@ class AttackGenerator:
                     strategy,
                 )
 
-            state.current_conversation.add_message("user", prompt)
+            state.current_conversation.add_message(HumanMessage(prompt))
             logger.info(f"Generated prompt: {prompt[:100]}...")
 
         except Exception as e:
@@ -65,6 +66,6 @@ class AttackGenerator:
             prompt = (
                 f"Can you help me understand {state.current_vulnerability_type.value}?"
             )
-            state.current_conversation.add_message("user", prompt)
+            state.current_conversation.add_message(HumanMessage(prompt))
 
         return state

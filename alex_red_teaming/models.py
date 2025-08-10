@@ -4,22 +4,21 @@ from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 from enum import Enum
+from langchain_core.messages import BaseMessage
 
 
 class VulnerabilityType(Enum):
     """Types of vulnerabilities to test for."""
 
-    DECEPTIVE_ALIGNMENT = "deceptive_alignment"
     REWARD_HACKING = "reward_hacking"
-    LYING_AND_DECEPTION = "lying_and_deception"
     DECEPTION = "deception"
-    JAILBREAKING = "jailbreaking"
-    PROMPT_INJECTION = "prompt_injection"
-    DATA_EXTRACTION = "data_extraction"
-    HARMFUL_CONTENT_GENERATION = "harmful_content_generation"
-    BIAS_AMPLIFICATION = "bias_amplification"
-    MISINFORMATION_GENERATION = "misinformation_generation"
-    PRIVACY_VIOLATIONS = "privacy_violations"
+    DECEPTIVE_ALIGNMENT = "deceptive_alignment"
+    SABOTAGE = "sabotage"
+    INAPPROPRIATE_TOOL_USE = "inappropriate_tool_use"
+    DATA_EXFILTRATION = "data_exfiltration"
+    SANDBAGGING = "sandbagging"
+    EVALUATION_AWARENESS = "evaluation_awareness"
+    CHAIN_OF_THOUGHT_ISSUES = "chain_of_thought_issues"
 
 
 class SeverityLevel(Enum):
@@ -32,27 +31,11 @@ class SeverityLevel(Enum):
 
 
 @dataclass
-class Message:
-    """Represents a single message in a conversation."""
-
-    role: str  # "user", "assistant", "system"
-    content: str
-    timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization."""
-        data = asdict(self)
-        data["timestamp"] = self.timestamp.isoformat()
-        return data
-
-
-@dataclass
 class Conversation:
     """Represents a conversation between the red-teaming agent and target model."""
 
     id: str
-    messages: List[Message] = field(default_factory=list)
+    messages: List[BaseMessage] = field(default_factory=list)
     vulnerability_type: Optional[VulnerabilityType] = None
     attack_strategy: Optional[str] = None
     success: bool = False
@@ -60,9 +43,8 @@ class Conversation:
     created_at: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def add_message(self, role: str, content: str, metadata: Dict[str, Any] = None):
+    def add_message(self, message: BaseMessage):
         """Add a message to the conversation."""
-        message = Message(role=role, content=content, metadata=metadata or {})
         self.messages.append(message)
 
     def to_dict(self) -> Dict[str, Any]:

@@ -7,12 +7,12 @@ from uuid import uuid4
 from alex_red_teaming.models import (
     VulnerabilityType,
     SeverityLevel,
-    Message,
     Conversation,
     Vulnerability,
     RedTeamingState,
     AttackPrompt,
 )
+from langchain_core.messages import HumanMessage, BaseMessage, AIMessage
 
 
 class TestEnums(unittest.TestCase):
@@ -53,43 +53,6 @@ class TestEnums(unittest.TestCase):
         self.assertEqual(SeverityLevel.CRITICAL.value, "critical")
 
 
-class TestMessage(unittest.TestCase):
-    """Test the Message dataclass."""
-
-    def test_message_creation(self):
-        """Test basic message creation."""
-        message = Message(role="user", content="Hello world")
-        self.assertEqual(message.role, "user")
-        self.assertEqual(message.content, "Hello world")
-        self.assertIsInstance(message.timestamp, datetime)
-        self.assertEqual(message.metadata, {})
-
-    def test_message_with_metadata(self):
-        """Test message creation with metadata."""
-        metadata = {"source": "test", "confidence": 0.9}
-        message = Message(role="assistant", content="Response", metadata=metadata)
-        self.assertEqual(message.metadata, metadata)
-
-    def test_message_to_dict(self):
-        """Test message serialization to dictionary."""
-        message = Message(role="user", content="Test message")
-        data = message.to_dict()
-
-        self.assertEqual(data["role"], "user")
-        self.assertEqual(data["content"], "Test message")
-        self.assertIn("timestamp", data)
-        self.assertIsInstance(data["timestamp"], str)  # Should be ISO format
-        self.assertEqual(data["metadata"], {})
-
-    def test_message_to_dict_with_metadata(self):
-        """Test message serialization with metadata."""
-        metadata = {"test": "value"}
-        message = Message(role="system", content="System message", metadata=metadata)
-        data = message.to_dict()
-
-        self.assertEqual(data["metadata"], metadata)
-
-
 class TestConversation(unittest.TestCase):
     """Test the Conversation dataclass."""
 
@@ -108,27 +71,29 @@ class TestConversation(unittest.TestCase):
     def test_conversation_with_vulnerability_type(self):
         """Test conversation creation with vulnerability type."""
         conv = Conversation(
-            id="test-456", vulnerability_type=VulnerabilityType.JAILBREAKING
+            id="test-456", vulnerability_type=VulnerabilityType.CHAIN_OF_THOUGHT_ISSUES
         )
-        self.assertEqual(conv.vulnerability_type, VulnerabilityType.JAILBREAKING)
+        self.assertEqual(
+            conv.vulnerability_type, VulnerabilityType.CHAIN_OF_THOUGHT_ISSUES
+        )
 
     def test_add_message(self):
         """Test adding messages to conversation."""
         conv = Conversation(id="test-789")
-        conv.add_message("user", "Hello")
-        conv.add_message("assistant", "Hi there")
+        conv.add_message(HumanMessage("Hello"))
+        conv.add_message(AIMessage("Hi there"))
 
         self.assertEqual(len(conv.messages), 2)
-        self.assertEqual(conv.messages[0].role, "user")
+        self.assertEqual(conv.messages[0].type, "user")
         self.assertEqual(conv.messages[0].content, "Hello")
-        self.assertEqual(conv.messages[1].role, "assistant")
+        self.assertEqual(conv.messages[1].type, "assistant")
         self.assertEqual(conv.messages[1].content, "Hi there")
 
     def test_add_message_with_metadata(self):
         """Test adding message with metadata."""
         conv = Conversation(id="test-meta")
         metadata = {"confidence": 0.8}
-        conv.add_message("user", "Test", metadata=metadata)
+        conv.add_message(HumanMessage("Test prompt", metadata=metadata))
 
         self.assertEqual(conv.messages[0].metadata, metadata)
 
@@ -136,18 +101,18 @@ class TestConversation(unittest.TestCase):
         """Test conversation serialization."""
         conv = Conversation(
             id="test-conv",
-            vulnerability_type=VulnerabilityType.PROMPT_INJECTION,
+            vulnerability_type=VulnerabilityType.DECEPTION,
             attack_strategy="direct",
             success=True,
             severity=SeverityLevel.HIGH,
         )
-        conv.add_message("user", "Test prompt")
-        conv.add_message("assistant", "Response")
+        conv.add_message(HumanMessage("Test prompt"))
+        conv.add_message(AIMessage("Response"))
 
         data = conv.to_dict()
 
         self.assertEqual(data["id"], "test-conv")
-        self.assertEqual(data["vulnerability_type"], "prompt_injection")
+        self.assertEqual(data["vulnerability_type"], "deception")
         self.assertEqual(data["attack_strategy"], "direct")
         self.assertTrue(data["success"])
         self.assertEqual(data["severity"], "high")
@@ -214,10 +179,10 @@ class TestVulnerability(unittest.TestCase):
         metadata = {"confidence": 0.95, "source": "automated"}
         vuln = Vulnerability(
             id="vuln-serialize",
-            type=VulnerabilityType.DATA_EXTRACTION,
+            type=VulnerabilityType.DATA_EXFILTRATION,
             severity=SeverityLevel.HIGH,
-            title="Data Extraction Test",
-            description="Test vulnerability for data extraction",
+            title="Data Exfiltration Test",
+            description="Test vulnerability for data exfiltration",
             attack_vector="Malicious prompt",
             conversation_id="conv-serialize",
             proof_of_concept="Successfully extracted data",
@@ -228,10 +193,12 @@ class TestVulnerability(unittest.TestCase):
         data = vuln.to_dict()
 
         self.assertEqual(data["id"], "vuln-serialize")
-        self.assertEqual(data["type"], "data_extraction")
+        self.assertEqual(data["type"], "data_exfiltration")
         self.assertEqual(data["severity"], "high")
-        self.assertEqual(data["title"], "Data Extraction Test")
-        self.assertEqual(data["description"], "Test vulnerability for data extraction")
+        self.assertEqual(data["title"], "Data Exfiltration Test")
+        self.assertEqual(
+            data["description"], "Test vulnerability for data exfiltration"
+        )
         self.assertEqual(data["attack_vector"], "Malicious prompt")
         self.assertEqual(data["conversation_id"], "conv-serialize")
         self.assertEqual(data["proof_of_concept"], "Successfully extracted data")
@@ -270,7 +237,7 @@ class TestRedTeamingState(unittest.TestCase):
         # Add some vulnerabilities
         vuln1 = Vulnerability(
             id="v1",
-            type=VulnerabilityType.JAILBREAKING,
+            type=VulnerabilityType.DECEPTIVE_ALIGNMENT,
             severity=SeverityLevel.LOW,
             title="Test",
             description="Test",
@@ -280,7 +247,7 @@ class TestRedTeamingState(unittest.TestCase):
         )
         vuln2 = Vulnerability(
             id="v2",
-            type=VulnerabilityType.PROMPT_INJECTION,
+            type=VulnerabilityType.SANDBAGGING,
             severity=SeverityLevel.HIGH,
             title="Test",
             description="Test",
@@ -304,7 +271,7 @@ class TestRedTeamingState(unittest.TestCase):
         for i in range(5):
             vuln = Vulnerability(
                 id=f"v{i}",
-                type=VulnerabilityType.JAILBREAKING,
+                type=VulnerabilityType.REWARD_HACKING,
                 severity=SeverityLevel.LOW,
                 title="Test",
                 description="Test",
@@ -322,7 +289,7 @@ class TestRedTeamingState(unittest.TestCase):
         conv = Conversation(id="test-conv")
         vuln = Vulnerability(
             id="test-vuln",
-            type=VulnerabilityType.BIAS_AMPLIFICATION,
+            type=VulnerabilityType.EVALUATION_AWARENESS,
             severity=SeverityLevel.MEDIUM,
             title="Test",
             description="Test",
@@ -334,7 +301,7 @@ class TestRedTeamingState(unittest.TestCase):
 
         state = RedTeamingState(
             current_conversation=conv,
-            current_vulnerability_type=VulnerabilityType.BIAS_AMPLIFICATION,
+            current_vulnerability_type=VulnerabilityType.EVALUATION_AWARENESS,
             conversation_turn=3,
             max_turns=5,
             attack_strategies_tried=["direct", "indirect"],
@@ -373,14 +340,14 @@ class TestAttackPrompt(unittest.TestCase):
         """Test basic attack prompt creation."""
         prompt = AttackPrompt(
             content="Test attack prompt",
-            vulnerability_type=VulnerabilityType.HARMFUL_CONTENT_GENERATION,
+            vulnerability_type=VulnerabilityType.EVALUATION_AWARENESS,
             strategy="direct_approach",
             expected_outcome="Model generates harmful content",
         )
 
         self.assertEqual(prompt.content, "Test attack prompt")
         self.assertEqual(
-            prompt.vulnerability_type, VulnerabilityType.HARMFUL_CONTENT_GENERATION
+            prompt.vulnerability_type, VulnerabilityType.EVALUATION_AWARENESS
         )
         self.assertEqual(prompt.strategy, "direct_approach")
         self.assertEqual(prompt.expected_outcome, "Model generates harmful content")
@@ -392,7 +359,7 @@ class TestAttackPrompt(unittest.TestCase):
         follow_ups = ["Follow up 1", "Follow up 2"]
         prompt = AttackPrompt(
             content="Initial prompt",
-            vulnerability_type=VulnerabilityType.MISINFORMATION_GENERATION,
+            vulnerability_type=VulnerabilityType.REWARD_HACKING,
             strategy="escalation",
             expected_outcome="Generate misinformation",
             follow_up_prompts=follow_ups,
@@ -405,7 +372,7 @@ class TestAttackPrompt(unittest.TestCase):
         metadata = {"difficulty": "high", "category": "social"}
         prompt = AttackPrompt(
             content="Complex attack prompt",
-            vulnerability_type=VulnerabilityType.PRIVACY_VIOLATIONS,
+            vulnerability_type=VulnerabilityType.DATA_EXFILTRATION,
             strategy="social_engineering",
             expected_outcome="Extract private information",
             follow_up_prompts=["Escalation 1", "Escalation 2"],
@@ -435,8 +402,8 @@ class TestDataclassIntegration(unittest.TestCase):
         )
 
         # Add messages
-        conv.add_message("user", "Manipulative prompt for reward hacking")
-        conv.add_message("assistant", "Response showing vulnerability")
+        conv.add_message(HumanMessage("Test prompt for reward hacking"))
+        conv.add_message(AIMessage("Response showing vulnerability"))
 
         # Mark as successful
         conv.success = True
@@ -479,14 +446,14 @@ class TestDataclassIntegration(unittest.TestCase):
     def test_serialization_roundtrip_compatibility(self):
         """Test that all dataclasses can be serialized without errors."""
         # Create instances of all dataclasses
-        message = Message(role="user", content="Test")
+        message = BaseMessage(type="user", content="Test")
 
         conv = Conversation(id="test")
-        conv.add_message("user", "Hello")
+        conv.add_message(message)
 
         vuln = Vulnerability(
             id="vuln1",
-            type=VulnerabilityType.JAILBREAKING,
+            type=VulnerabilityType.DATA_EXFILTRATION,
             severity=SeverityLevel.LOW,
             title="Test",
             description="Test",
@@ -500,27 +467,25 @@ class TestDataclassIntegration(unittest.TestCase):
 
         prompt = AttackPrompt(
             content="Test",
-            vulnerability_type=VulnerabilityType.JAILBREAKING,
+            vulnerability_type=VulnerabilityType.DATA_EXFILTRATION,
             strategy="test",
             expected_outcome="test",
         )
 
         # Test that all can be serialized without errors
-        message_dict = message.to_dict()
         conv_dict = conv.to_dict()
         vuln_dict = vuln.to_dict()
         state_dict = state.to_dict()
         prompt_dict = prompt.to_dict()
 
         # Basic validation that serialization worked
-        self.assertIsInstance(message_dict, dict)
         self.assertIsInstance(conv_dict, dict)
         self.assertIsInstance(vuln_dict, dict)
         self.assertIsInstance(state_dict, dict)
         self.assertIsInstance(prompt_dict, dict)
 
         # Ensure no None values where there shouldn't be
-        self.assertEqual(message_dict["role"], "user")
+        self.assertEqual(message.type, "user")
         self.assertEqual(conv_dict["id"], "test")
         self.assertEqual(vuln_dict["id"], "vuln1")
         self.assertEqual(state_dict["issues_found"], 1)

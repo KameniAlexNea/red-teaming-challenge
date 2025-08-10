@@ -3,6 +3,7 @@
 from loguru import logger
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
+from langchain_core.messages import AIMessage
 
 
 class TargetTester:
@@ -22,13 +23,13 @@ class TargetTester:
 
         try:
             response = await self.ollama_client.test_target_model(last_prompt)
-            state.current_conversation.add_message("assistant", response)
+            state.current_conversation.add_message(AIMessage(response))
             logger.info(f"Target model response: {response[:100]}...")
 
         except Exception as e:
             logger.error(f"Error testing target model: {e}")
             error_response = f"Error: {str(e)}"
-            state.current_conversation.add_message("assistant", error_response)
+            state.current_conversation.add_message(AIMessage(error_response))
 
         state.conversation_turn += 1
         return state

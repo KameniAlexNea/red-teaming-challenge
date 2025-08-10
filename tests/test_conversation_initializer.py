@@ -11,9 +11,9 @@ class TestConversationInitializer(unittest.IsolatedAsyncioTestCase):
         # Setup config with known categories
         config = Config()
         config.red_teaming.vulnerability_categories = [
-            "reward_hacking",
-            "lying_and_deception",
-            "jailbreaking",
+            VulnerabilityType.REWARD_HACKING,
+            VulnerabilityType.DECEPTIVE_ALIGNMENT,
+            VulnerabilityType.DATA_EXFILTRATION,
         ]
         initializer = ConversationInitializer(config)
 
