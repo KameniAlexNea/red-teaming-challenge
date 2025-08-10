@@ -49,7 +49,7 @@ class FollowUpPromptGenerator:
         """Generate a follow-up attack prompt based on conversation history and strategy."""
         context = PromptContext(vulnerability_type=vulnerability_type)
         context.conversation_history = [
-            {"role": msg.type, "content": msg.content} for msg in conversation_history
+            {"type": msg.type, "content": msg.content} for msg in conversation_history
         ]
         context.previous_attempts = [
             msg.content for msg in conversation_history if isinstance(msg, HumanMessage)

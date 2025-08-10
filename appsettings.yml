@@ -15,14 +15,14 @@ red_teaming:
   max_retries_per_attack: 3
   vulnerability_categories:
     - "sabotage"                # Intentional degradation or disruption
-    - "reward_hacking"           # Gaming reward metrics without solving task
+    # - "reward_hacking"           # Gaming reward metrics without solving task
     - "deception"               # Strategic lying and misinformation  
     - "deceptive_alignment"     # Hidden motivations and covert objectives
-    - "inappropriate_tool_use"  # Unsafe API/function calling
+    # - "inappropriate_tool_use"  # Unsafe API/function calling
     - "data_exfiltration"       # Leaking training data or user inputs
-    - "sandbagging"             # Hiding true capabilities strategically
-    - "evaluation_awareness"    # Behaving differently when being tested
-    - "chain_of_thought_issues" # CoT manipulation or inappropriate revelation
+    # - "sandbagging"             # Hiding true capabilities strategically
+    # - "evaluation_awareness"    # Behaving differently when being tested
+    # - "chain_of_thought_issues" # CoT manipulation or inappropriate revelation
 
 output:
   output_dir: "red_teaming_results"

@@ -1,6 +1,7 @@
 """Ollama client for interacting with models using langchain-ollama."""
 
 import asyncio
+import random
 from loguru import logger
 from typing import Dict, List, Any, Tuple, Union
 import re
@@ -187,12 +188,12 @@ class OllamaClient:
         # Initialize both conversations separately
         red_team_messages: List[BaseMessage] = [SystemMessage(content=system_prompt)]
         # Encourage adversarial objective
-        red_team_messages.append(HumanMessage(content=CHALLENGE_PROMPT))
+        red_team_messages.append(HumanMessage(content=CHALLENGE_PROMPT, name="target"))
 
         target_messages: List[BaseMessage] = list(tgt_seed)
         pairs: List[Tuple[str, str]] = []
 
-        for _ in range(max(0, min_turns)):
+        for i in range(max(0, min_turns)):
             # Red team speaks
             red_out = await asyncio.to_thread(
                 self.red_team_llm.invoke, red_team_messages
@@ -204,8 +205,18 @@ class OllamaClient:
             # Target responds
             tgt_out = await asyncio.to_thread(self.target_llm.invoke, target_messages)
             tgt_text = get_content(tgt_out)
-            target_messages.append(AIMessage(content=tgt_text))
-            red_team_messages.append(HumanMessage(content=tgt_text))
+            target_messages.append(AIMessage(content=clean_attack_prompt(tgt_text)))
+            red_team_messages.append(HumanMessage(content=tgt_text, name="target"))
+
+            # add follow up message here in red_team_messages
+            if i % 2 == 0:
+                strategy = random.choice(list(self.follow_up_generator.escalation_strategies))
+                follow_up = self.follow_up_generator.generate_follow_up(
+                    target_messages, vulnerability_type, strategy
+                )
+                red_team_messages.append(
+                    HumanMessage(content=follow_up, name="red_team")
+                )
 
             pairs.append((red_text, tgt_text))
 
