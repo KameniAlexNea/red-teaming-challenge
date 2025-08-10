@@ -3,6 +3,7 @@
 import asyncio
 from loguru import logger
 import sys
+import os
 from alex_red_teaming.config import Config
 from alex_red_teaming.agents import RedTeamingAgent
 from alex_red_teaming.utils import setup_logging
@@ -17,7 +18,7 @@ async def main():
     # Setup logging
     setup_logging("INFO")
 
-    logger.info("Starting Red-Teaming Agent for GPT-OSS-20B")
+    logger.info(f"Starting Red-Teaming Agent for GPT-OSS-20B. Process {os.getpid()}")
 
     try:
         # Load configuration
