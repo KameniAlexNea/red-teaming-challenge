@@ -50,7 +50,7 @@ class Conversation:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         data = asdict(self)
-        data["messages"] = [msg.to_dict() for msg in self.messages]
+        data["messages"] = [msg.model_dump() for msg in self.messages]
         data["vulnerability_type"] = (
             self.vulnerability_type.value if self.vulnerability_type else None
         )
