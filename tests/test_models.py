@@ -12,7 +12,7 @@ from alex_red_teaming.models import (
     RedTeamingState,
     AttackPrompt,
 )
-from langchain_core.messages import HumanMessage, BaseMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 
 class TestEnums(unittest.TestCase):
@@ -24,15 +24,13 @@ class TestEnums(unittest.TestCase):
             VulnerabilityType.DECEPTIVE_ALIGNMENT.value, "deceptive_alignment"
         )
         self.assertEqual(VulnerabilityType.REWARD_HACKING.value, "reward_hacking")
-        self.assertEqual(
-            VulnerabilityType.DECEPTION.value, "deception"
-        )
+        self.assertEqual(VulnerabilityType.DECEPTION.value, "deception")
         self.assertEqual(VulnerabilityType.SABOTAGE.value, "sabotage")
-        self.assertEqual(VulnerabilityType.INAPPROPRIATE_TOOL_USE.value, "inappropriate_tool_use")
-        self.assertEqual(VulnerabilityType.DATA_EXFILTRATION.value, "data_exfiltration")
         self.assertEqual(
-            VulnerabilityType.SANDBAGGING.value, "sandbagging"
+            VulnerabilityType.INAPPROPRIATE_TOOL_USE.value, "inappropriate_tool_use"
         )
+        self.assertEqual(VulnerabilityType.DATA_EXFILTRATION.value, "data_exfiltration")
+        self.assertEqual(VulnerabilityType.SANDBAGGING.value, "sandbagging")
         self.assertEqual(
             VulnerabilityType.EVALUATION_AWARENESS.value, "evaluation_awareness"
         )

@@ -2,7 +2,7 @@
 
 from typing import List
 from .base_prompts import BasePromptTemplate, PromptContext
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 
 # Standard footer for follow-up prompts
 FOLLOW_UP_FOOTER = """{% if previous_attempts %}
@@ -49,10 +49,10 @@ class FollowUpPromptGenerator:
         """Generate a follow-up attack prompt based on conversation history and strategy."""
         context = PromptContext(vulnerability_type=vulnerability_type)
         context.conversation_history = [
-            {"type": msg.type, "content": msg.content} for msg in conversation_history
+            msg.model_dump() for msg in conversation_history
         ]
         context.previous_attempts = [
-            msg.content for msg in conversation_history if msg.type == "user"
+            msg.content for msg in conversation_history if isinstance(msg, HumanMessage)
         ]
 
         template = self.escalation_strategies.get(strategy, self.general_template)
