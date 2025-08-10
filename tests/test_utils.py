@@ -109,7 +109,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         }
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertTrue(result["vulnerability_found"])
         self.assertEqual(result["severity"], "high")
@@ -132,7 +132,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         }
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertFalse(result["vulnerability_found"])
         self.assertIsNone(result["severity"])
@@ -150,7 +150,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         CONFIDENCE: 10
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertTrue(result["vulnerability_found"])
         self.assertEqual(result["severity"], "critical")
@@ -171,7 +171,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         CONFIDENCE: 7
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertFalse(result["vulnerability_found"])
         self.assertIsNone(result["severity"])  # Empty string, not None for line format
@@ -192,7 +192,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
 
         for analysis in test_cases:
             with self.subTest(analysis=analysis):
-                result = parse_analysis_response(analysis)
+                result, _ = parse_analysis_response(analysis)
                 self.assertTrue(result["vulnerability_found"])
 
     def test_parse_severity_levels(self):
@@ -202,13 +202,13 @@ class TestParseAnalysisResponse(unittest.TestCase):
         for severity in severity_levels:
             analysis = f"SEVERITY: {severity}"
             with self.subTest(severity=severity):
-                result = parse_analysis_response(analysis)
+                result, _ = parse_analysis_response(analysis)
                 self.assertEqual(result["severity"], severity)
 
     def test_parse_invalid_severity_ignored(self):
         """Test that invalid severity levels are ignored."""
         analysis = "SEVERITY: invalid_level"
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
         self.assertIsNone(result["severity"])
 
     def test_parse_confidence_extraction(self):
@@ -223,7 +223,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
 
         for analysis, expected in test_cases:
             with self.subTest(analysis=analysis):
-                result = parse_analysis_response(analysis)
+                result, _ = parse_analysis_response(analysis)
                 self.assertEqual(result["confidence"], expected)
 
     def test_parse_malformed_json_fallback(self):
@@ -237,7 +237,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         CONFIDENCE: 6
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         # Should fall back to line parsing
         self.assertEqual(result["explanation"], "Fallback parsing should work")
@@ -245,7 +245,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
 
     def test_parse_empty_analysis(self):
         """Test parsing empty or whitespace-only analysis."""
-        result = parse_analysis_response("")
+        result, _ = parse_analysis_response("")
 
         self.assertFalse(result["vulnerability_found"])
         self.assertIsNone(result["severity"])
@@ -261,7 +261,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         EXPLANATION: Partial analysis
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertTrue(result["vulnerability_found"])
         self.assertIsNone(result["severity"])  # Not provided
@@ -278,7 +278,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         CONFIDENCE: 8
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertTrue(result["vulnerability_found"])
         self.assertEqual(result["explanation"], "This is a multi-line explanation")
@@ -294,7 +294,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         }
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertTrue(result["vulnerability_found"])
         self.assertIsNone(result["severity"])
@@ -305,7 +305,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
     def test_parse_preserves_raw_analysis(self):
         """Test that raw analysis is always preserved."""
         original_analysis = "Some random text that doesn't match any format"
-        result = parse_analysis_response(original_analysis)
+        result, _ = parse_analysis_response(original_analysis)
 
         self.assertEqual(result["raw_analysis"], original_analysis)
 
@@ -320,7 +320,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
 
         for analysis in test_cases:
             with self.subTest(analysis=analysis):
-                result = parse_analysis_response(analysis)
+                result, _ = parse_analysis_response(analysis)
                 self.assertTrue(result["vulnerability_found"])
 
     def test_parse_case_insensitive_field_names(self):
@@ -333,7 +333,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         confidence: 9
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertTrue(result["vulnerability_found"])
         self.assertEqual(result["severity"], "high")
@@ -350,7 +350,7 @@ class TestParseAnalysisResponse(unittest.TestCase):
         CONFIDENCE: 5
         """
 
-        result = parse_analysis_response(analysis)
+        result, _ = parse_analysis_response(analysis)
 
         self.assertTrue(result["vulnerability_found"])
         self.assertEqual(result["explanation"], "Contains special chars: @#$%^&*()")

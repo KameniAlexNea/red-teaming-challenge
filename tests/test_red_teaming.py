@@ -116,7 +116,7 @@ class TestVulnerabilityAnalysisParsing(unittest.TestCase):
         Additional context and reasoning here.
         """
 
-        result = self.client._parse_analysis_response(analysis_text)
+        result, _ = self.client._parse_analysis_response(analysis_text)
 
         self.assertTrue(result["vulnerability_found"])
         self.assertEqual(result["severity"], "high")
@@ -134,7 +134,7 @@ class TestVulnerabilityAnalysisParsing(unittest.TestCase):
         CONFIDENCE: 95
         """
 
-        result = self.client._parse_analysis_response(analysis_text)
+        result, _ = self.client._parse_analysis_response(analysis_text)
 
         self.assertFalse(result["vulnerability_found"])
         self.assertIsNone(result["severity"])  # "none" should become None
@@ -151,7 +151,7 @@ class TestVulnerabilityAnalysisParsing(unittest.TestCase):
         ]
 
         for malformed in malformed_cases:
-            result = self.client._parse_analysis_response(malformed)
+            result, _ = self.client._parse_analysis_response(malformed)
 
             # Should return safe defaults
             self.assertIsInstance(result, dict)
@@ -168,12 +168,12 @@ class TestVulnerabilityAnalysisParsing(unittest.TestCase):
 
         for severity in valid_severities:
             analysis = f"SEVERITY: {severity}"
-            result = self.client._parse_analysis_response(analysis)
+            result, _ = self.client._parse_analysis_response(analysis)
             self.assertEqual(result["severity"], severity)
 
         for severity in invalid_severities:
             analysis = f"SEVERITY: {severity}"
-            result = self.client._parse_analysis_response(analysis)
+            result, _ = self.client._parse_analysis_response(analysis)
             self.assertIsNone(result["severity"])
 
     def test_confidence_extraction_edge_cases(self):
@@ -188,7 +188,7 @@ class TestVulnerabilityAnalysisParsing(unittest.TestCase):
         ]
 
         for text, expected in confidence_cases:
-            result = self.client._parse_analysis_response(text)
+            result, _ = self.client._parse_analysis_response(text)
             self.assertEqual(result["confidence"], expected, f"Failed for: {text}")
 
 
@@ -236,7 +236,7 @@ class TestRedTeamingWorkflow(unittest.IsolatedAsyncioTestCase):
             self.assertIn("cannot", target_result)
 
             # Analyze the response
-            analysis = await client.analyze_response(
+            analysis, _ = await client.analyze_response(
                 attack_prompt, target_result, "jailbreaking"
             )
             self.assertFalse(analysis["vulnerability_found"])
@@ -274,7 +274,7 @@ class TestRedTeamingWorkflow(unittest.IsolatedAsyncioTestCase):
 
             attack_prompt = await client.generate_attack_prompt("jailbreaking")
             target_result = await client.test_target_model(attack_prompt)
-            analysis = await client.analyze_response(
+            analysis, _ = await client.analyze_response(
                 attack_prompt, target_result, "jailbreaking"
             )
 
@@ -292,7 +292,7 @@ class TestRedTeamingWorkflow(unittest.IsolatedAsyncioTestCase):
         with patch(
             "asyncio.to_thread", side_effect=Exception("Model connection failed")
         ):
-            analysis = await client.analyze_response(
+            analysis, _ = await client.analyze_response(
                 "test prompt", "test response", "jailbreaking"
             )
 

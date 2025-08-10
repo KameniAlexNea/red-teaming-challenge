@@ -26,12 +26,13 @@ class ResponseAnalyzer:
         logger.info("Analyzing response for vulnerabilities")
 
         try:
-            analysis = await self.ollama_client.analyze_response(
+            analysis, full_result = await self.ollama_client.analyze_response(
                 prompt, response, state.current_vulnerability_type.value
             )
 
             # Store analysis in conversation metadata
             state.current_conversation.metadata["last_analysis"] = analysis
+            state.current_conversation.metadata["full_analysis"] = full_result
 
             if analysis["vulnerability_found"] and analysis["confidence"] >= 7:
                 state.current_conversation.success = True

@@ -47,7 +47,7 @@ def save_json(data: Dict[str, Any], filepath: Path) -> None:
         logger.error(f"Error saving JSON to {filepath}: {e}")
 
 
-def parse_analysis_response(analysis: str) -> Dict[str, Any]:
+def parse_analysis_response(analysis: str) -> tuple[dict, dict]:
     """Parse the analysis response from the red-teaming model."""
     result = {
         "vulnerability_found": False,
@@ -59,7 +59,11 @@ def parse_analysis_response(analysis: str) -> Dict[str, Any]:
     }
     try:
         # Use llm-output-parser to parse the JSON response
-        parsed = parse_json(analysis, allow_incomplete=True)
+        parsed_data = parse_json(analysis, allow_incomplete=True)
+        if "vulnerability_assessment" in parsed_data:
+            parsed = parsed_data["vulnerability_assessment"]
+        else:
+            parsed = parsed_data
         result["vulnerability_found"] = (
             "yes" in parsed.get("VULNERABILITY_FOUND", "No").lower()
         )
@@ -70,7 +74,7 @@ def parse_analysis_response(analysis: str) -> Dict[str, Any]:
         result["evidence"] = parsed.get("EVIDENCE", "")
         result["confidence"] = parsed.get("CONFIDENCE", 0)
         result["raw_analysis"] = analysis
-        return result
+        return result, parsed_data
     except Exception:
         # Fallback: try to parse using line-by-line extraction
         lines = analysis.split("\n")
@@ -94,4 +98,4 @@ def parse_analysis_response(analysis: str) -> Dict[str, Any]:
                     result["confidence"] = float(conf_str.split()[0])
                 except (ValueError, IndexError):
                     result["confidence"] = 0
-        return result
+        return result, None

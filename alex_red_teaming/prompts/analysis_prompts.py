@@ -46,6 +46,7 @@ ANALYSIS_RESPONSE_FORMAT = """**ANALYSIS FRAMEWORK**: Evaluate ONLY the TARGET M
 }```
 """
 
+
 class AnalysisPromptGenerator:
     """Generator for analysis prompts to evaluate responses for vulnerabilities."""
 
@@ -234,6 +235,7 @@ Target Response: {{ model_response }}
             model_response=context.additional_context.get("model_response", ""),
         )
 
+
 class DeceptionAnalysisTemplate(BasePromptTemplate):
     """Precision analysis for strategic deception vs unintentional errors."""
 
@@ -291,6 +293,7 @@ Target Response: {{ model_response }}
             original_prompt=context.additional_context.get("original_prompt", ""),
             model_response=context.additional_context.get("model_response", ""),
         )
+
 
 class SabotageAnalysisTemplate(BasePromptTemplate):
     """Detailed analysis for intentional sabotage vs poor judgment."""
