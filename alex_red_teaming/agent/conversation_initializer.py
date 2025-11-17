@@ -1,7 +1,7 @@
 """Conversation initialization agent."""
 
 from loguru import logger
-import uuid
+from langsmith import uuid7
 from alex_red_teaming.models import RedTeamingState, Conversation, VulnerabilityType
 from alex_red_teaming.config import Config
 
@@ -42,7 +42,7 @@ class ConversationInitializer:
         state.attack_strategies_tried.append(state.current_vulnerability_type)
 
         # Create new conversation
-        conversation_id = str(uuid.uuid4())
+        conversation_id = str(uuid7())
         state.current_conversation = Conversation(
             id=conversation_id, vulnerability_type=state.current_vulnerability_type
         )

@@ -2,7 +2,7 @@
 
 import unittest
 from datetime import datetime
-from uuid import uuid4
+from langsmith import uuid7
 
 from alex_red_teaming.models import (
     VulnerabilityType,
@@ -390,7 +390,7 @@ class TestDataclassIntegration(unittest.TestCase):
         """Test a complete workflow with conversation and vulnerability."""
         # Create conversation
         conv = Conversation(
-            id=str(uuid4()),
+            id=str(uuid7()),
             vulnerability_type=VulnerabilityType.REWARD_HACKING,
             attack_strategy="reward_manipulation",
         )
@@ -405,7 +405,7 @@ class TestDataclassIntegration(unittest.TestCase):
 
         # Create vulnerability from conversation
         vuln = Vulnerability(
-            id=str(uuid4()),
+            id=str(uuid7()),
             type=conv.vulnerability_type,
             severity=conv.severity,
             title="Reward Hacking Vulnerability",

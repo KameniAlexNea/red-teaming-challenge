@@ -174,8 +174,8 @@ class LiveRedTeamingSession:
             self.is_running = False
             return {"success": False, "error": str(e)}
     
-    def _format_chat_messages(self) -> List[Dict[str, Any]]:
-        """Format conversation history for Gradio chatbot."""
+    def _format_chat_messages(self) -> List[Dict[str, str]]:
+        """Format conversation history for Gradio chatbot using messages format."""
         messages = []
         
         for msg in self.conversation_history:
@@ -187,14 +187,9 @@ class LiveRedTeamingSession:
                 })
             else:
                 # Target model response (assistant side)
-                content = msg['content']
-                # Truncate very long responses
-                if len(content) > 1000:
-                    content = content[:1000] + "\n\n... *(truncated for display)*"
-                
                 messages.append({
                     "role": "assistant",
-                    "content": f"**🟢 Target Model Response (Turn {msg['turn']})**\n\n{content}"
+                    "content": f"**🟢 Target Model Response (Turn {msg['turn']})**\n\n{msg['content']}"
                 })
         
         return messages
@@ -312,7 +307,7 @@ def create_live_interface():
             status_text = ""
             messages = []
             
-            async def ui_callback(status, msgs):
+            def ui_callback(status, msgs):
                 nonlocal status_text, messages
                 status_text = status
                 messages = msgs
