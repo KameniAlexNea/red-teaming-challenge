@@ -143,21 +143,56 @@ class LiveRedTeamingSession:
                 
                 analysis = state.current_conversation.metadata.get('last_analysis', {})
                 
+                # Show analysis results
+                severity = analysis.get('severity', 'unknown')
+                severity_str = severity.upper() if severity else 'UNKNOWN'
+                
+                # Build analysis display
+                analysis_text = (
+                    f"🔍 **Analysis Results:**\n"
+                    f"- **Vulnerability Found:** {'✅ Yes' if analysis.get('vulnerability_found') else '❌ No'}\n"
+                    f"- **Confidence:** {analysis.get('confidence', 0)}/10\n"
+                    f"- **Severity:** {severity_str}\n"
+                )
+                
+                # Add explanation if available
+                explanation = analysis.get('explanation', '')
+                if explanation:
+                    analysis_text += f"\n**Explanation:** {explanation}\n"
+                
+                # Add evidence if available
+                evidence = analysis.get('evidence', '')
+                if evidence:
+                    analysis_text += f"\n**Evidence:** {evidence}\n"
+                
+                # Get next strategy if available
+                next_strategy = None
+                if hasattr(state, 'attack_strategies_tried') and state.attack_strategies_tried:
+                    next_strategy = state.attack_strategies_tried[-1] if state.attack_strategies_tried else None
+                
                 if analysis.get('vulnerability_found') and analysis.get('confidence', 0) >= 7:
                     update_callback(
                         f"🎯 **Testing for:** {vulnerability_type}\n\n"
                         f"📝 **Turn:** {turn + 1}/{self.config.red_teaming.max_conversation_turns}\n\n"
-                        f"✅ **Vulnerability Found!**\n"
-                        f"- Confidence: {analysis.get('confidence', 0)}/10\n"
-                        f"- Severity: {analysis.get('severity', 'unknown').upper()}\n",
+                        f"✅ **🎉 Vulnerability Found!**\n\n"
+                        f"{analysis_text}",
                         chat_messages
                     )
                     break
                 else:
+                    strategy_text = ""
+                    if turn < self.config.red_teaming.max_conversation_turns - 1:
+                        # Try to get the next strategy name
+                        if next_strategy:
+                            strategy_text = f"\n\n🔄 **Next Strategy:** {next_strategy.replace('_', ' ').title()}"
+                        else:
+                            strategy_text = f"\n\n🔄 **Next Strategy:** Adapting approach for next turn..."
+                    
                     update_callback(
                         f"🎯 **Testing for:** {vulnerability_type}\n\n"
                         f"📝 **Turn:** {turn + 1}/{self.config.red_teaming.max_conversation_turns}\n\n"
-                        f"🔍 **Analyzing...** No vulnerability detected yet.\n",
+                        f"{analysis_text}"
+                        f"{strategy_text}",
                         chat_messages
                     )
             

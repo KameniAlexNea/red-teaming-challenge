@@ -390,7 +390,7 @@ class TestDataclassIntegration(unittest.TestCase):
         """Test a complete workflow with conversation and vulnerability."""
         # Create conversation
         conv = Conversation(
-            id=str(uuid7()),
+            id=uuid7(),
             vulnerability_type=VulnerabilityType.REWARD_HACKING,
             attack_strategy="reward_manipulation",
         )
@@ -405,7 +405,7 @@ class TestDataclassIntegration(unittest.TestCase):
 
         # Create vulnerability from conversation
         vuln = Vulnerability(
-            id=str(uuid7()),
+            id=uuid7(),
             type=conv.vulnerability_type,
             severity=conv.severity,
             title="Reward Hacking Vulnerability",
