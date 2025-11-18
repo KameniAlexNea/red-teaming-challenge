@@ -7,7 +7,9 @@ This module provides interactive web interfaces for:
 - Analyzing conversation traces between LLMs
 """
 
-from alex_chat.gradio_chat_viewer import create_gradio_interface as create_viewer_interface
+from alex_chat.gradio_chat_viewer import (
+    create_gradio_interface as create_viewer_interface,
+)
 from alex_chat.gradio_live_chat import create_live_interface
 
 __all__ = [

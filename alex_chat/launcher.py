@@ -19,44 +19,50 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from alex_chat.gradio_chat_viewer import create_gradio_interface as create_viewer
 from alex_chat.gradio_live_chat import create_live_interface
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
 def create_combined_interface():
     """Create a combined interface with both viewer and live chat."""
-    
+
     with gr.Blocks(
-        title="AI vs AI Red-Teaming Platform",
-        theme=gr.themes.Soft()
+        title="AI vs AI Red-Teaming Platform", theme=gr.themes.Soft()
     ) as app:
-        
-        gr.Markdown("""
+        gr.Markdown(
+            """
         # 🤖 AI vs AI Red-Teaming Platform
         
         Complete platform for red-teaming AI models with conversation visualization.
-        """)
-        
-        with gr.Tabs() as tabs:
-            with gr.Tab("📂 Session Viewer"):
-                gr.Markdown("""
-                ### Browse Historical Red-Teaming Sessions
-                
-                View past red-teaming sessions, discovered vulnerabilities, and conversation traces.
-                """)
-                # Embed the viewer interface
-                viewer = create_viewer()
-            
+        """
+        )
+
+        with gr.Tabs():
             with gr.Tab("▶️ Live Red-Teaming"):
-                gr.Markdown("""
+                gr.Markdown(
+                    """
                 ### Run Live Red-Teaming Tests
                 
                 Start a new red-teaming session and watch the AI vs AI conversation in real-time.
-                """)
+                """
+                )
                 # Embed the live interface
-                live = create_live_interface()
-            
+                create_live_interface()
+
+            with gr.Tab("📂 Session Viewer"):
+                gr.Markdown(
+                    """
+                ### Browse Historical Red-Teaming Sessions
+                
+                View past red-teaming sessions, discovered vulnerabilities, and conversation traces.
+                """
+                )
+                # Embed the viewer interface
+                create_viewer()
+
             with gr.Tab("ℹ️ About"):
-                gr.Markdown("""
+                gr.Markdown(
+                    """
                 ## About This Platform
                 
                 This platform provides tools for red-teaming AI models through adversarial testing.
@@ -115,8 +121,9 @@ def create_combined_interface():
                 ---
                 
                 For more information, check the project documentation.
-                """)
-        
+                """
+                )
+
         return app
 
 
@@ -129,24 +136,24 @@ def main():
         "--mode",
         choices=["viewer", "live", "combined"],
         default="combined",
-        help="Interface mode: viewer (browse sessions), live (real-time testing), or combined (both)"
+        help="Interface mode: viewer (browse sessions), live (real-time testing), or combined (both)",
     )
     parser.add_argument(
         "--port",
         type=int,
         default=7860,
-        help="Port to run the server on (default: 7860)"
+        help="Port to run the server on (default: 7860)",
     )
     parser.add_argument(
-        "--share",
-        action="store_true",
-        help="Create a public share link"
+        "--share", action="store_true", help="Create a public share link"
     )
-    
+
     args = parser.parse_args()
-    
-    logger.info(f"Launching red-teaming interface in {args.mode} mode on port {args.port}")
-    
+
+    logger.info(
+        f"Launching red-teaming interface in {args.mode} mode on port {args.port}"
+    )
+
     # Create appropriate interface
     if args.mode == "viewer":
         app = create_viewer()
@@ -154,13 +161,10 @@ def main():
         app = create_live_interface()
     else:  # combined
         app = create_combined_interface()
-    
+
     # Launch
     app.launch(
-        server_name="0.0.0.0",
-        server_port=args.port,
-        share=args.share,
-        show_error=True
+        server_name="0.0.0.0", server_port=args.port, share=args.share, show_error=True
     )
 
 
