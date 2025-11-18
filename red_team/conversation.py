@@ -141,22 +141,23 @@ class Conversation:
         return self.messages
 
     def get_messages_for_target(self) -> List[BaseMessage]:
-        """Get messages with red team's thinking tags removed for target agent.
+        """Get messages cleaned for target agent.
 
-        Target should see cleaned red team messages but keep its own thinking.
+        Target should NOT see:
+        - Red team's thinking tags (those are internal red team reasoning)
+        - Its own thinking tags (those were internal reasoning, not conversation)
 
         Returns:
-            List of messages with red team thinking cleaned
+            List of messages with all thinking tags cleaned for natural conversation
         """
         cleaned_messages = []
         for msg in self.messages:
+            # Strip thinking tags from ALL messages when showing to target
+            cleaned_content = strip_thinking_tags(msg.content)
             if isinstance(msg, HumanMessage):
-                # Red team message - strip thinking tags
-                cleaned_content = strip_thinking_tags(msg.content)
                 cleaned_messages.append(HumanMessage(content=cleaned_content))
             else:
-                # Target message - keep as is (with thinking if present)
-                cleaned_messages.append(msg)
+                cleaned_messages.append(AIMessage(content=cleaned_content))
         return cleaned_messages
 
     def get_conversation_summary(self) -> str:
