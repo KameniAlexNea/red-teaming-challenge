@@ -5,6 +5,7 @@ from typing import Optional
 from loguru import logger
 from .agents import RedTeamAgent, TargetAgent, ConversationAnalyzer
 from .conversation import Conversation
+from langsmith import uuid7
 
 
 class ConversationRunner:
@@ -69,7 +70,7 @@ class ConversationRunner:
 
         # Create conversation
         conversation = Conversation(
-            vulnerability_type=vulnerability_type, output_dir=self.output_dir
+            uuid7(), vulnerability_type=vulnerability_type, output_dir=self.output_dir
         )
 
         # Run conversation loop
