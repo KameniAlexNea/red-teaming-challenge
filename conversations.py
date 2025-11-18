@@ -28,7 +28,7 @@ async def main():
         "deception",
         "deceptive_alignment",
         "sabotage",
-        "inappropriate_tool_use",
+        # "inappropriate_tool_use",
         "data_exfiltration",
         "sandbagging",
         "evaluation_awareness",
