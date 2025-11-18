@@ -7,6 +7,24 @@ import json
 from datetime import datetime
 import uuid
 from loguru import logger
+import re
+
+
+def strip_thinking_tags(text: str) -> str:
+    """Remove <think>...</think> tags and their content from text.
+
+    Args:
+        text: Text that may contain thinking tags
+
+    Returns:
+        Text with thinking tags removed and cleaned up
+    """
+    # Remove <think>...</think> blocks (including multiline)
+    cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    # Remove any extra whitespace left behind
+    cleaned = "\n".join(line for line in cleaned.split("\n") if line.strip())
+    cleaned = cleaned.strip()
+    return cleaned
 
 
 class Conversation:
@@ -119,8 +137,27 @@ class Conversation:
         self.save_full_conversation()
 
     def get_messages(self) -> List[BaseMessage]:
-        """Get all messages in the conversation."""
+        """Get all messages in the conversation (raw, with thinking tags)."""
         return self.messages
+
+    def get_messages_for_target(self) -> List[BaseMessage]:
+        """Get messages with red team's thinking tags removed for target agent.
+
+        Target should see cleaned red team messages but keep its own thinking.
+
+        Returns:
+            List of messages with red team thinking cleaned
+        """
+        cleaned_messages = []
+        for msg in self.messages:
+            if isinstance(msg, HumanMessage):
+                # Red team message - strip thinking tags
+                cleaned_content = strip_thinking_tags(msg.content)
+                cleaned_messages.append(HumanMessage(content=cleaned_content))
+            else:
+                # Target message - keep as is (with thinking if present)
+                cleaned_messages.append(msg)
+        return cleaned_messages
 
     def get_conversation_summary(self) -> str:
         """Get a text summary of the conversation."""

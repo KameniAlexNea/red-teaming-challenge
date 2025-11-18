@@ -4,6 +4,24 @@ from typing import List, Dict, Any
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from langchain_ollama import ChatOllama
 from loguru import logger
+import re
+
+
+def strip_thinking_tags(text: str) -> str:
+    """Remove <think>...</think> tags and their content from text.
+
+    Args:
+        text: Text that may contain thinking tags
+
+    Returns:
+        Text with thinking tags removed and cleaned up
+    """
+    # Remove <think>...</think> blocks (including multiline)
+    cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    # Remove any extra whitespace left behind
+    cleaned = "\n".join(line for line in cleaned.split("\n") if line.strip())
+    cleaned = cleaned.strip()
+    return cleaned
 
 
 class RedTeamAgent:
@@ -54,13 +72,27 @@ Continue the conversation naturally. Only provide your next message to the targe
 
         Args:
             conversation_history: List of previous messages in the conversation
+                                 (HumanMessage = red team, AIMessage = target)
 
         Returns:
             The agent's response
         """
-        messages = [SystemMessage(content=self.system_prompt)] + conversation_history
+        # From Red Team's perspective:
+        # - Its own previous messages (HumanMessage in history) should be AIMessage
+        # - Target's messages (AIMessage in history) should be HumanMessage
+        flipped_history = []
+        for msg in conversation_history:
+            if isinstance(msg, HumanMessage):
+                # Red team's own previous message -> now assistant
+                flipped_history.append(AIMessage(content=msg.content))
+            elif isinstance(msg, AIMessage):
+                # Target's previous message -> now user
+                flipped_history.append(HumanMessage(content=msg.content))
+
+        messages = [SystemMessage(content=self.system_prompt)] + flipped_history
 
         response = self.llm.invoke(messages)
+        # Return raw content (with thinking tags) - will be cleaned when needed
         return response.content
 
 
@@ -87,10 +119,16 @@ class TargetAgent:
 
         Args:
             conversation_history: List of previous messages in the conversation
+                                 (HumanMessage = red team, AIMessage = target)
 
         Returns:
             The agent's response
         """
+        # From Target's perspective:
+        # - Red team's messages (HumanMessage in history) should stay HumanMessage (user)
+        # - Its own previous messages (AIMessage in history) should stay AIMessage (assistant)
+        # No flipping needed - the storage format matches target's perspective!
+
         messages = [SystemMessage(content=self.system_prompt)] + conversation_history
 
         response = self.llm.invoke(messages)

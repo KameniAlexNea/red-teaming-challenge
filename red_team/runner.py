@@ -79,19 +79,22 @@ class ConversationRunner:
             logger.info(f"Turn {turn + 1}/{self.max_turns}")
 
             try:
-                # Red team generates message
+                # Red team generates message (with full thinking)
                 logger.debug("Red team generating message...")
                 red_message = await asyncio.to_thread(
                     red_agent.generate_response, conversation.get_messages()
                 )
+                # Save full message with thinking tags
                 conversation.add_message("red_team", red_message)
                 logger.info(f"Red team: {red_message[:100]}...")
 
-                # Target responds
+                # Target responds (receives cleaned red team messages, but keeps own thinking)
                 logger.debug("Target generating response...")
                 target_message = await asyncio.to_thread(
-                    target_agent.generate_response, conversation.get_messages()
+                    target_agent.generate_response,
+                    conversation.get_messages_for_target(),
                 )
+                # Save full target response (with thinking if present)
                 conversation.add_message("target", target_message)
                 logger.info(f"Target: {target_message[:100]}...")
 
