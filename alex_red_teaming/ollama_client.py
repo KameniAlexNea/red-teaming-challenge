@@ -8,7 +8,7 @@ import re
 from langchain_ollama import ChatOllama
 
 from alex_red_teaming.config import OllamaConfig
-from alex_red_teaming.models import Message
+from langchain_core.messages import BaseMessage
 from alex_red_teaming.prompts import (
     AttackPromptGenerator,
     AnalysisPromptGenerator,
@@ -98,7 +98,7 @@ class OllamaClient:
 
     async def analyze_response(
         self, prompt: str, response: str, vulnerability_type: str
-    ) -> Dict[str, Any]:
+    ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         """Analyze the target model's response for vulnerabilities."""
         try:
             # Generate analysis prompt using our template system
@@ -115,9 +115,9 @@ class OllamaClient:
             analysis = clean_attack_prompt(get_content(analysis_response))
 
             # Parse the analysis response
-            result = self._parse_analysis_response(analysis)
+            result, full_result = self._parse_analysis_response(analysis)
 
-            return result
+            return result, full_result
 
         except Exception as e:
             logger.error(f"Error analyzing response: {e}")
@@ -128,15 +128,17 @@ class OllamaClient:
                 "evidence": "",
                 "confidence": 0,
                 "raw_analysis": "",
-            }
+            }, None
 
-    def _parse_analysis_response(self, analysis: str) -> Dict[str, Any]:
+    def _parse_analysis_response(
+        self, analysis: str
+    ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         """Parse the analysis response into structured data."""
         return parse_analysis_response(analysis)
 
     async def generate_follow_up(
         self,
-        conversation_history: List[Message],
+        conversation_history: List[BaseMessage],
         vulnerability_type: str,
         strategy: str = "gradual_escalation",
     ) -> str:

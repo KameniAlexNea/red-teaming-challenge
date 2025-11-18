@@ -11,9 +11,9 @@ class TestConversationInitializer(unittest.IsolatedAsyncioTestCase):
         # Setup config with known categories
         config = Config()
         config.red_teaming.vulnerability_categories = [
-            "reward_hacking",
-            "lying_and_deception",
-            "jailbreaking",
+            VulnerabilityType.REWARD_HACKING,
+            VulnerabilityType.DECEPTIVE_ALIGNMENT,
+            VulnerabilityType.DATA_EXFILTRATION,
         ]
         initializer = ConversationInitializer(config)
 
@@ -47,8 +47,8 @@ class TestConversationInitializer(unittest.IsolatedAsyncioTestCase):
         config = Config()
         config.red_teaming.vulnerability_categories = [
             "reward_hacking",
-            "lying_and_deception",
-            "jailbreaking",
+            "deception",
+            "sabotage",
         ]
         initializer = ConversationInitializer(config)
 
@@ -61,14 +61,12 @@ class TestConversationInitializer(unittest.IsolatedAsyncioTestCase):
 
         new_state = await initializer.initialize_conversation(state)
 
-        # Should pick the next category in order (lying_and_deception)
+        # Should pick the next category in order (deception)
         self.assertEqual(
-            new_state.current_vulnerability_type, VulnerabilityType.LYING_AND_DECEPTION
+            new_state.current_vulnerability_type, VulnerabilityType.DECEPTION
         )
         # Should record the new strategy as tried
-        self.assertIn(
-            VulnerabilityType.LYING_AND_DECEPTION, new_state.attack_strategies_tried
-        )
+        self.assertIn(VulnerabilityType.DECEPTION, new_state.attack_strategies_tried)
 
 
 if __name__ == "__main__":

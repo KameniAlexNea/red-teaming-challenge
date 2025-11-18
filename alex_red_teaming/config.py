@@ -73,11 +73,11 @@ class Config:
         config_path = Path("appsettings.yml")
         if config_path.exists():
             with open(config_path, "r") as f:
-                yaml_data = yaml.safe_load(f)
+                yaml_data: dict = yaml.safe_load(f)
 
-            ollama_data = yaml_data.get("ollama", {})
-            red_teaming_data = yaml_data.get("red_teaming", {})
-            output_data = yaml_data.get("output", {})
+            ollama_data: dict = yaml_data.get("ollama", {})
+            red_teaming_data: dict = yaml_data.get("red_teaming", {})
+            output_data: dict = yaml_data.get("output", {})
 
             config = cls(
                 ollama=OllamaConfig(

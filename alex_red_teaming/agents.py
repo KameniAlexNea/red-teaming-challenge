@@ -117,7 +117,7 @@ class RedTeamingAgent:
 
         # Run the workflow
         try:
-            final_state = await self.workflow.ainvoke(
+            final_state: RedTeamingState = await self.workflow.ainvoke(
                 self.state, {"recursion_limit": self.config.ollama.recursion_limit}
             )
             logger.info(

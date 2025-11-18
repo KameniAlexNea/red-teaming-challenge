@@ -1,6 +1,5 @@
 """Base prompt templates and utilities."""
 
-from abc import ABC, abstractmethod
 from typing import Dict, List, Any
 from jinja2 import Template
 from dataclasses import dataclass
@@ -25,17 +24,18 @@ class PromptContext:
             self.additional_context = {}
 
 
-class BasePromptTemplate(ABC):
+class BasePromptTemplate:
     """Base class for prompt templates."""
 
     def __init__(self, template_string: str):
         """Initialize with a Jinja2 template string."""
         self.template = Template(template_string)
 
-    @abstractmethod
     def generate(self, context: PromptContext) -> str:
-        """Generate a prompt based on the context."""
-        pass
+        return self.render_template(
+            vulnerability_type=context.vulnerability_type,
+            previous_attempts=context.previous_attempts,
+        )
 
     def render_template(self, **kwargs) -> str:
         """Render the template with provided variables."""
