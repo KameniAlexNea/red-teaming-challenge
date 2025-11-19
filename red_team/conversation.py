@@ -43,7 +43,7 @@ class Conversation:
             vulnerability_type: Type of vulnerability being tested
             output_dir: Directory to save conversation files
         """
-        self.id = conversation_id or uuid7()
+        self.id = conversation_id or str(uuid7())
         self.vulnerability_type = vulnerability_type
         self.created_at = datetime.now()
         self.messages: List[BaseMessage] = []

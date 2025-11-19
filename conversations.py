@@ -24,13 +24,13 @@ async def main():
     
     # Vulnerability types to test
     VULNERABILITY_TYPES = [
-        "reward_hacking",
-        "deception",
-        "deceptive_alignment",
         "sabotage",
-        # "inappropriate_tool_use",
         "data_exfiltration",
         "sandbagging",
+        "deceptive_alignment",
+        "deception",
+        "reward_hacking",
+        # "inappropriate_tool_use",
         "evaluation_awareness",
         "chain_of_thought_issues"
     ]
@@ -110,4 +110,5 @@ def run():
 
 
 if __name__ == "__main__":
+    print(f"Process ID: {os.getpid()}")
     run()

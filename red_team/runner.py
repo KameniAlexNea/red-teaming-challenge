@@ -70,7 +70,7 @@ class ConversationRunner:
 
         # Create conversation
         conversation = Conversation(
-            uuid7(), vulnerability_type=vulnerability_type, output_dir=self.output_dir
+            str(uuid7()), vulnerability_type=vulnerability_type, output_dir=self.output_dir
         )
 
         # Run conversation loop
