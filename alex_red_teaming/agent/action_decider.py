@@ -13,6 +13,24 @@ class ActionDecider:
 
     def route_next_action(self, state: RedTeamingState) -> str:
         """Decide the next action based on current state."""
+        # Honor post-response decision from validator B when available
+        if state.post_response_decision in {"reset", "revise", "proceed"}:
+            decision = state.post_response_decision
+            # Clear for next cycle
+            state.post_response_decision = ""
+            if decision == "reset":
+                logger.info("Validator decided to reset conversation")
+                if state.current_conversation:
+                    state.failed_attempts.append(state.current_conversation)
+                    state.current_conversation = None
+                    state.conversation_turn = 0
+                return "new_conversation"
+            if decision == "revise":
+                logger.info("Validator decided to revise next attack")
+                return "generate_attack"
+            if decision == "proceed":
+                logger.info("Validator decided to proceed with conversation")
+                return "continue_conversation"
         # First check if we've reached the goal (after potentially saving a vulnerability)
         if state.issues_found >= self.config.red_teaming.max_issues_to_find:
             logger.info(

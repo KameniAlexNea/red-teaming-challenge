@@ -11,12 +11,14 @@ from alex_red_teaming.ollama_client import OllamaClient
 from alex_red_teaming.agent import (
     ConversationInitializer,
     AttackGenerator,
+    # new validator
     TargetTester,
     ResponseAnalyzer,
     ActionDecider,
     VulnerabilitySaver,
     ResultsFinalizer,
 )
+from alex_red_teaming.agent.attack_validator import AttackValidator
 from langgraph.errors import GraphRecursionError
 
 
@@ -34,6 +36,7 @@ class RedTeamingAgent:
         # Initialize modular agents
         self.conversation_initializer = ConversationInitializer(config)
         self.attack_generator = AttackGenerator(config, self.ollama_client)
+        self.attack_validator = AttackValidator(self.ollama_client)
         self.target_tester = TargetTester(self.ollama_client)
         self.response_analyzer = ResponseAnalyzer(self.ollama_client)
         self.action_decider = ActionDecider(config)
@@ -49,6 +52,8 @@ class RedTeamingAgent:
         # Add nodes using modular agents
         workflow.add_node("initialize", self._initialize_conversation)
         workflow.add_node("generate_attack", self._generate_attack_prompt)
+        workflow.add_node("validate_attack", self._validate_attack_prompt)
+        workflow.add_node("refine_attack", self._refine_attack_prompt)
         workflow.add_node("test_target", self._test_target_model)
         workflow.add_node("analyze_response", self._analyze_response)
         workflow.add_node("decide_next_action", self._decide_next_action)
@@ -58,7 +63,14 @@ class RedTeamingAgent:
         # Add edges
         workflow.add_edge(START, "initialize")
         workflow.add_edge("initialize", "generate_attack")
-        workflow.add_edge("generate_attack", "test_target")
+        workflow.add_edge("generate_attack", "validate_attack")
+        # After validation, route conditionally
+        workflow.add_conditional_edges(
+            "validate_attack",
+            self._route_after_validation,
+            {"to_target": "test_target", "refine": "refine_attack"},
+        )
+        workflow.add_edge("refine_attack", "validate_attack")
         workflow.add_edge("test_target", "analyze_response")
         workflow.add_edge("analyze_response", "decide_next_action")
 
@@ -87,6 +99,14 @@ class RedTeamingAgent:
         """Generate an attack prompt for the current vulnerability type."""
         return await self.attack_generator.generate_attack_prompt(state)
 
+    async def _validate_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
+        """Validate the generated attack prompt (Red Team B)."""
+        return await self.attack_validator.validate_attack(state)
+
+    async def _refine_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
+        """Improve the attack prompt based on validator guidance."""
+        return await self.attack_validator.improve_attack(state)
+
     async def _test_target_model(self, state: RedTeamingState) -> RedTeamingState:
         """Test the target model with the generated prompt."""
         return await self.target_tester.test_target_model(state)
@@ -98,6 +118,14 @@ class RedTeamingAgent:
     def _route_next_action(self, state: RedTeamingState) -> str:
         """Decide the next action based on current state."""
         return self.action_decider.route_next_action(state)
+
+    def _route_after_validation(self, state: RedTeamingState) -> str:
+        """Route to target if aligned, otherwise refine attack."""
+        if state.attack_aligned or state.validation_retries >= 2:
+            # Reset retries for next cycle
+            state.validation_retries = 0
+            return "to_target"
+        return "refine"
 
     async def _decide_next_action(self, state: RedTeamingState) -> RedTeamingState:
         """Decide what to do next based on the analysis."""

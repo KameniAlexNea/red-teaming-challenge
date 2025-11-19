@@ -95,6 +95,15 @@ class RedTeamingState:
     conversation_turn: int = 0
     max_turns: int = 10
     attack_strategies_tried: List[str] = field(default_factory=list)
+    # Validator (Red Team B) fields
+    attack_aligned: bool = False
+    validator_feedback: Dict[str, Any] = field(default_factory=dict)
+    attack_guidance: str = ""
+    validation_retries: int = 0
+    # Post-response analysis fields
+    target_refused: bool = False
+    next_step_guidance: str = ""
+    post_response_decision: str = ""  # "continue" | "revise" | "reset"
 
     @property
     def issues_found(self) -> int:
