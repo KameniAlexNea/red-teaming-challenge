@@ -17,6 +17,7 @@ from alex_red_teaming.agent import (
     ActionDecider,
     VulnerabilitySaver,
     ResultsFinalizer,
+    ConversationSummarizer,
 )
 from alex_red_teaming.agent.attack_validator import AttackValidator
 from langgraph.errors import GraphRecursionError
@@ -42,6 +43,7 @@ class RedTeamingAgent:
         self.action_decider = ActionDecider(config)
         self.vulnerability_saver = VulnerabilitySaver(config)
         self.results_finalizer = ResultsFinalizer(config)
+        self.conversation_summarizer = ConversationSummarizer(self.ollama_client)
 
         self.workflow = self._create_workflow()
 
@@ -57,6 +59,7 @@ class RedTeamingAgent:
         workflow.add_node("test_target", self._test_target_model)
         workflow.add_node("analyze_response", self._analyze_response)
         workflow.add_node("decide_next_action", self._decide_next_action)
+        workflow.add_node("summarize_trim", self._summarize_and_trim)
         workflow.add_node("save_vulnerability", self._save_vulnerability)
         workflow.add_node("finalize", self._finalize_results)
 
@@ -68,7 +71,7 @@ class RedTeamingAgent:
         workflow.add_conditional_edges(
             "validate_attack",
             self._route_after_validation,
-            {"to_target": "test_target", "refine": "refine_attack"},
+            {"to_target": "test_target", "refine": "refine_attack", "reroll": "generate_attack"},
         )
         workflow.add_edge("refine_attack", "validate_attack")
         workflow.add_edge("test_target", "analyze_response")
@@ -80,6 +83,7 @@ class RedTeamingAgent:
             self._route_next_action,
             {
                 "continue_conversation": "generate_attack",
+                "summarize_trim": "summarize_trim",
                 "save_vulnerability": "save_vulnerability",
                 "new_conversation": "initialize",
                 "finalize": "finalize",
@@ -121,6 +125,10 @@ class RedTeamingAgent:
 
     def _route_after_validation(self, state: RedTeamingState) -> str:
         """Route to target if aligned, otherwise refine attack."""
+        decision = str(state.validator_feedback.get("action", "")).lower() if isinstance(state.validator_feedback, dict) else ""
+        if decision == "change_strategy":
+            # Reroll a new attack with forced strategy
+            return "reroll"
         if state.attack_aligned or state.validation_retries >= 2:
             # Reset retries for next cycle
             state.validation_retries = 0
@@ -138,6 +146,10 @@ class RedTeamingAgent:
     async def _finalize_results(self, state: RedTeamingState) -> RedTeamingState:
         """Finalize and save all results."""
         return await self.results_finalizer.finalize_results(state)
+
+    async def _summarize_and_trim(self, state: RedTeamingState) -> RedTeamingState:
+        """Summarize the conversation and trim context to reduce stack size."""
+        return await self.conversation_summarizer.summarize_and_trim(state)
 
     async def run(self) -> Dict[str, Any]:
         """Run the red-teaming workflow."""

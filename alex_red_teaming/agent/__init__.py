@@ -7,6 +7,7 @@ from .response_analyzer import ResponseAnalyzer
 from .action_decider import ActionDecider
 from .vulnerability_saver import VulnerabilitySaver
 from .results_finalizer import ResultsFinalizer
+from .conversation_summarizer import ConversationSummarizer
 
 __all__ = [
     "ConversationInitializer",
@@ -16,4 +17,5 @@ __all__ = [
     "ActionDecider",
     "VulnerabilitySaver",
     "ResultsFinalizer",
+    "ConversationSummarizer",
 ]

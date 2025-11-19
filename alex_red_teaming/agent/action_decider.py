@@ -13,6 +13,11 @@ class ActionDecider:
 
     def route_next_action(self, state: RedTeamingState) -> str:
         """Decide the next action based on current state."""
+        # If a refusal occurred or a point of failure was marked, consider summarizing & trimming
+        if state.current_conversation and (
+            state.target_refused or state.current_conversation.metadata.get("point_of_failure")
+        ):
+            return "summarize_trim"
         # Honor post-response decision from validator B when available
         if state.post_response_decision in {"reset", "revise", "proceed"}:
             decision = state.post_response_decision

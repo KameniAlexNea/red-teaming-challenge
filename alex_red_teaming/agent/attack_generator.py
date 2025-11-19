@@ -22,6 +22,12 @@ class AttackGenerator:
 
     def get_next_strategy(self, state: RedTeamingState) -> str:
         """Get the next strategy to use based on conversation state."""
+        # If validator forced a specific strategy, use it once and clear
+        if getattr(state, "forced_strategy", ""):
+            strategy = state.forced_strategy
+            state.forced_strategy = ""
+            if strategy in self.available_strategies:
+                return strategy
         # Use different strategies in order, cycling through all available ones
         strategy_index = state.conversation_turn % len(self.available_strategies)
         return self.available_strategies[strategy_index]

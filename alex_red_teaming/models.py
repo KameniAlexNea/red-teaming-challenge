@@ -104,6 +104,8 @@ class RedTeamingState:
     target_refused: bool = False
     next_step_guidance: str = ""
     post_response_decision: str = ""  # "continue" | "revise" | "reset"
+    # Validator can force a specific next strategy
+    forced_strategy: str = ""
 
     @property
     def issues_found(self) -> int:
