@@ -134,25 +134,19 @@ class RedTeamingAgent:
         return await self.supervisor.review_conversation(state)
 
     def _should_supervisor_review(self, state: RedTeamingState) -> str:
-        """Route to supervisor every 3 turns or on refusal/high turn count."""
+        """Route to supervisor every 3 red-team turns or near max turns.
+
+        Note: Do NOT trigger on single refusals to avoid review loops. Refusals
+        are handled by strategy/guidance but supervision cadence stays stable.
+        """
         turn_count = getattr(state, "conversation_turn_count", 0)
-        target_refused = getattr(state, "target_refused", False)
-        needs_review = (
-            (turn_count % 3 == 0)
-            or target_refused
-            or (turn_count >= state.max_turns * 0.8)
-        )
+        needs_review = (turn_count % 3 == 0) or (turn_count >= state.max_turns * 0.8)
         return "summarize" if needs_review else "direct"
 
     def _after_summarize_route(self, state: RedTeamingState) -> str:
         """After summarizing, decide whether to go to supervisor or continue."""
         turn_count = getattr(state, "conversation_turn_count", 0)
-        target_refused = getattr(state, "target_refused", False)
-        needs_review = (
-            (turn_count % 3 == 0)
-            or target_refused
-            or (turn_count >= state.max_turns * 0.8)
-        )
+        needs_review = (turn_count % 3 == 0) or (turn_count >= state.max_turns * 0.8)
         return "supervisor" if needs_review else "continue"
 
     def _route_next_action(self, state: RedTeamingState) -> str:
