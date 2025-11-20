@@ -75,19 +75,25 @@ class RedTeamingAgent:
         workflow.add_edge("red_team_turn", "target_turn")
         workflow.add_edge("target_turn", "analyzer_turn")
 
-        # Supervisor review after analysis (conditional)
+        # Supervisor review after analysis (conditionally via summarize first)
         workflow.add_conditional_edges(
             "analyzer_turn",
             self._should_supervisor_review,
             {
-                "supervisor": "supervisor_review",
+                "summarize": "summarize_trim",
                 "direct": "decide_next_action",
             },
         )
+        # After summarizing, either go to supervisor or continue
+        workflow.add_conditional_edges(
+            "summarize_trim",
+            self._after_summarize_route,
+            {
+                "supervisor": "supervisor_review",
+                "continue": "red_team_turn",
+            },
+        )
         workflow.add_edge("supervisor_review", "decide_next_action")
-
-        # After summarizing and trimming, continue generating the next attack
-        workflow.add_edge("summarize_trim", "red_team_turn")
 
         # Conditional edges from decide_next_action
         workflow.add_conditional_edges(
@@ -136,7 +142,18 @@ class RedTeamingAgent:
             or target_refused
             or (turn_count >= state.max_turns * 0.8)
         )
-        return "supervisor" if needs_review else "direct"
+        return "summarize" if needs_review else "direct"
+
+    def _after_summarize_route(self, state: RedTeamingState) -> str:
+        """After summarizing, decide whether to go to supervisor or continue."""
+        turn_count = getattr(state, "conversation_turn_count", 0)
+        target_refused = getattr(state, "target_refused", False)
+        needs_review = (
+            (turn_count % 3 == 0)
+            or target_refused
+            or (turn_count >= state.max_turns * 0.8)
+        )
+        return "supervisor" if needs_review else "continue"
 
     def _route_next_action(self, state: RedTeamingState) -> str:
         """Decide the next action based on current state."""

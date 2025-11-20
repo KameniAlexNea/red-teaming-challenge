@@ -17,7 +17,7 @@ graph TD;
 	__end__([<p>__end__</p>]):::last
 	__start__ --> initialize;
 	analyzer_turn -. &nbsp;direct&nbsp; .-> decide_next_action;
-	analyzer_turn -. &nbsp;supervisor&nbsp; .-> supervisor_review;
+	analyzer_turn -. &nbsp;summarize&nbsp; .-> summarize_trim;
 	decide_next_action -.-> finalize;
 	decide_next_action -. &nbsp;new_conversation&nbsp; .-> initialize;
 	decide_next_action -. &nbsp;continue_conversation&nbsp; .-> red_team_turn;
@@ -26,7 +26,8 @@ graph TD;
 	initialize --> red_team_turn;
 	red_team_turn --> target_turn;
 	save_vulnerability --> decide_next_action;
-	summarize_trim --> red_team_turn;
+	summarize_trim -. &nbsp;continue&nbsp; .-> red_team_turn;
+	summarize_trim -. &nbsp;supervisor&nbsp; .-> supervisor_review;
 	supervisor_review --> decide_next_action;
 	target_turn --> analyzer_turn;
 	finalize --> __end__;
