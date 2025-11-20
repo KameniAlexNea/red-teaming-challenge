@@ -4,18 +4,17 @@ import asyncio
 import re
 from typing import Any, Dict, List
 
-import json
-
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_ollama import ChatOllama
+from llm_output_parser import parse_json
 from loguru import logger
 
 from alex_red_teaming.config import OllamaConfig
 from alex_red_teaming.prompts import (
     AnalysisPromptGenerator,
     AttackPromptGenerator,
-    FollowUpPromptGenerator,
     ConversationalPromptGenerator,
+    FollowUpPromptGenerator,
     PromptContext,
 )
 
@@ -275,8 +274,9 @@ RULES:
 
         # Parse JSON response
         try:
-            parsed = json.loads(response)
-        except:
+            parsed = parse_json(clean_attack_prompt(get_content(response)))
+        except Exception as ex:
+            logger.error(f"Error parsing supervisor review response. {ex}")
             parsed = {
                 "decision": "continue",
                 "confidence": 5,

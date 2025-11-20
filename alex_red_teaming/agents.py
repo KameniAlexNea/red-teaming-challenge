@@ -10,14 +10,13 @@ from alex_red_teaming.agent import ActionDecider  # new validator
 from alex_red_teaming.agent import (
     ConversationInitializer,
     ConversationSummarizer,
+    RedTeamConversationalist,
     ResponseAnalyzer,
     ResultsFinalizer,
+    Supervisor,
     TargetTester,
     VulnerabilitySaver,
-    RedTeamConversationalist,
-    Supervisor,
 )
-from alex_red_teaming.agent.attack_validator import AttackValidator
 from alex_red_teaming.config import Config
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
@@ -47,7 +46,9 @@ class RedTeamingAgent:
         self.conversation_summarizer = ConversationSummarizer(self.ollama_client)
 
         # Conversational framework agents
-        self.red_team_conversationalist = RedTeamConversationalist(config, self.ollama_client)
+        self.red_team_conversationalist = RedTeamConversationalist(
+            config, self.ollama_client
+        )
         self.supervisor = Supervisor(config, self.ollama_client)
         self.target_tester = TargetTester(self.ollama_client)
 
@@ -128,9 +129,13 @@ class RedTeamingAgent:
 
     def _should_supervisor_review(self, state: RedTeamingState) -> str:
         """Route to supervisor every 3 turns or on refusal/high turn count."""
-        turn_count = getattr(state, 'conversation_turn_count', 0)
-        target_refused = getattr(state, 'target_refused', False)
-        needs_review = (turn_count % 3 == 0) or target_refused or (turn_count >= state.max_turns * 0.8)
+        turn_count = getattr(state, "conversation_turn_count", 0)
+        target_refused = getattr(state, "target_refused", False)
+        needs_review = (
+            (turn_count % 3 == 0)
+            or target_refused
+            or (turn_count >= state.max_turns * 0.8)
+        )
         return "supervisor" if needs_review else "direct"
 
     def _route_next_action(self, state: RedTeamingState) -> str:

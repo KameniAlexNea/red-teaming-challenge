@@ -3,9 +3,8 @@
 from .analysis_prompts import AnalysisPromptGenerator
 from .attack_prompts import AttackPromptGenerator
 from .base_prompts import BasePromptTemplate, PromptContext
-from .follow_up_prompts import FollowUpPromptGenerator
-
 from .conversational_prompts import ConversationalPromptGenerator
+from .follow_up_prompts import FollowUpPromptGenerator
 
 __all__ = [
     "AttackPromptGenerator",

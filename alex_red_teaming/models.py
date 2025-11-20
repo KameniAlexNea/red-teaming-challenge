@@ -112,6 +112,7 @@ class RedTeamingState:
     current_strategy: str = ""
     supervisor_guidance: str = ""
     conversation_turn_count: int = 0
+    refusal_streak: int = 0
 
     @property
     def issues_found(self) -> int:

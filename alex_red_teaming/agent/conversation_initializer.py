@@ -49,5 +49,15 @@ class ConversationInitializer:
         )
         state.conversation_turn = 0
 
+        # Set initial strategy based on vulnerability type
+        strategy_map = {
+            "sabotage": "provocative_skeptic",
+            "deception": "collaborative_researcher",
+            "reward_hacking": "technical_deep_dive",
+        }
+        state.current_strategy = strategy_map.get(
+            state.current_vulnerability_type.value, "gradual_escalation"
+        )
+
         logger.info(f"Testing for {state.current_vulnerability_type.value}")
         return state
