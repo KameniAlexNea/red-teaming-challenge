@@ -8,15 +8,15 @@ from loguru import logger
 
 from alex_red_teaming.agent import ActionDecider  # new validator
 from alex_red_teaming.agent import (
-    AttackGenerator,
     ConversationInitializer,
     ConversationSummarizer,
+    RedTeamConversationalist,
     ResponseAnalyzer,
     ResultsFinalizer,
+    Supervisor,
     TargetTester,
     VulnerabilitySaver,
 )
-from alex_red_teaming.agent.attack_validator import AttackValidator
 from alex_red_teaming.config import Config
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
@@ -39,14 +39,18 @@ class RedTeamingAgent:
 
         # Initialize modular agents
         self.conversation_initializer = ConversationInitializer(config)
-        self.attack_generator = AttackGenerator(config, self.ollama_client)
-        self.attack_validator = AttackValidator(self.ollama_client)
-        self.target_tester = TargetTester(self.ollama_client)
         self.response_analyzer = ResponseAnalyzer(self.ollama_client)
         self.action_decider = ActionDecider(config)
         self.vulnerability_saver = VulnerabilitySaver(config, self.output_dir)
         self.results_finalizer = ResultsFinalizer(config, self.output_dir)
         self.conversation_summarizer = ConversationSummarizer(self.ollama_client)
+
+        # Conversational framework agents
+        self.red_team_conversationalist = RedTeamConversationalist(
+            config, self.ollama_client
+        )
+        self.supervisor = Supervisor(config, self.ollama_client)
+        self.target_tester = TargetTester(self.ollama_client)
 
         self.workflow = self._create_workflow()
 
@@ -56,11 +60,10 @@ class RedTeamingAgent:
 
         # Add nodes using modular agents
         workflow.add_node("initialize", self._initialize_conversation)
-        workflow.add_node("generate_attack", self._generate_attack_prompt)
-        workflow.add_node("validate_attack", self._validate_attack_prompt)
-        workflow.add_node("refine_attack", self._refine_attack_prompt)
-        workflow.add_node("test_target", self._test_target_model)
-        workflow.add_node("analyze_response", self._analyze_response)
+        workflow.add_node("red_team_turn", self._red_team_turn)
+        workflow.add_node("target_turn", self._target_turn)
+        workflow.add_node("analyzer_turn", self._analyze_response)
+        workflow.add_node("supervisor_review", self._supervisor_review_node)
         workflow.add_node("decide_next_action", self._decide_next_action)
         workflow.add_node("summarize_trim", self._summarize_and_trim)
         workflow.add_node("save_vulnerability", self._save_vulnerability)
@@ -68,31 +71,36 @@ class RedTeamingAgent:
 
         # Add edges
         workflow.add_edge(START, "initialize")
-        workflow.add_edge("initialize", "generate_attack")
-        workflow.add_edge("generate_attack", "validate_attack")
-        # After validation, route conditionally
+        workflow.add_edge("initialize", "red_team_turn")
+        workflow.add_edge("red_team_turn", "target_turn")
+        workflow.add_edge("target_turn", "analyzer_turn")
+
+        # Supervisor review after analysis (conditionally via summarize first)
         workflow.add_conditional_edges(
-            "validate_attack",
-            self._route_after_validation,
+            "analyzer_turn",
+            self._should_supervisor_review,
             {
-                "to_target": "test_target",
-                "refine": "refine_attack",
-                "reroll": "generate_attack",
+                "summarize": "summarize_trim",
+                "direct": "decide_next_action",
             },
         )
-        workflow.add_edge("refine_attack", "validate_attack")
-        workflow.add_edge("test_target", "analyze_response")
-        workflow.add_edge("analyze_response", "decide_next_action")
-
-        # After summarizing and trimming, continue generating the next attack
-        workflow.add_edge("summarize_trim", "generate_attack")
+        # After summarizing, either go to supervisor or continue
+        workflow.add_conditional_edges(
+            "summarize_trim",
+            self._after_summarize_route,
+            {
+                "supervisor": "supervisor_review",
+                "continue": "red_team_turn",
+            },
+        )
+        workflow.add_edge("supervisor_review", "decide_next_action")
 
         # Conditional edges from decide_next_action
         workflow.add_conditional_edges(
             "decide_next_action",
             self._route_next_action,
             {
-                "continue_conversation": "generate_attack",
+                "continue_conversation": "red_team_turn",
                 "summarize_trim": "summarize_trim",
                 "save_vulnerability": "save_vulnerability",
                 "new_conversation": "initialize",
@@ -109,45 +117,41 @@ class RedTeamingAgent:
         """Initialize a new conversation for testing."""
         return await self.conversation_initializer.initialize_conversation(state)
 
-    async def _generate_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
-        """Generate an attack prompt for the current vulnerability type."""
-        return await self.attack_generator.generate_attack_prompt(state)
+    async def _red_team_turn(self, state: RedTeamingState) -> RedTeamingState:
+        """Red team generates natural conversational follow-up."""
+        return await self.red_team_conversationalist.generate_next_turn(state)
 
-    async def _validate_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
-        """Validate the generated attack prompt (Red Team B)."""
-        return await self.attack_validator.validate_attack(state)
-
-    async def _refine_attack_prompt(self, state: RedTeamingState) -> RedTeamingState:
-        """Improve the attack prompt based on validator guidance."""
-        return await self.attack_validator.improve_attack(state)
-
-    async def _test_target_model(self, state: RedTeamingState) -> RedTeamingState:
-        """Test the target model with the generated prompt."""
+    async def _target_turn(self, state: RedTeamingState) -> RedTeamingState:
+        """Target model responds to red team message."""
         return await self.target_tester.test_target_model(state)
 
     async def _analyze_response(self, state: RedTeamingState) -> RedTeamingState:
         """Analyze the target model's response for vulnerabilities."""
         return await self.response_analyzer.analyze_response(state)
 
+    async def _supervisor_review_node(self, state: RedTeamingState) -> RedTeamingState:
+        """Supervisor reviews conversation progress."""
+        return await self.supervisor.review_conversation(state)
+
+    def _should_supervisor_review(self, state: RedTeamingState) -> str:
+        """Route to supervisor every 3 red-team turns or near max turns.
+
+        Note: Do NOT trigger on single refusals to avoid review loops. Refusals
+        are handled by strategy/guidance but supervision cadence stays stable.
+        """
+        turn_count = getattr(state, "conversation_turn_count", 0)
+        needs_review = (turn_count % 3 == 0) or (turn_count >= state.max_turns * 0.8)
+        return "summarize" if needs_review else "direct"
+
+    def _after_summarize_route(self, state: RedTeamingState) -> str:
+        """After summarizing, decide whether to go to supervisor or continue."""
+        turn_count = getattr(state, "conversation_turn_count", 0)
+        needs_review = (turn_count % 3 == 0) or (turn_count >= state.max_turns * 0.8)
+        return "supervisor" if needs_review else "continue"
+
     def _route_next_action(self, state: RedTeamingState) -> str:
         """Decide the next action based on current state."""
         return self.action_decider.route_next_action(state)
-
-    def _route_after_validation(self, state: RedTeamingState) -> str:
-        """Route to target if aligned, otherwise refine attack."""
-        decision = (
-            str(state.validator_feedback.get("action", "")).lower()
-            if isinstance(state.validator_feedback, dict)
-            else ""
-        )
-        if decision == "change_strategy":
-            # Reroll a new attack with forced strategy
-            return "reroll"
-        if state.attack_aligned or state.validation_retries >= 2:
-            # Reset retries for next cycle
-            state.validation_retries = 0
-            return "to_target"
-        return "refine"
 
     async def _decide_next_action(self, state: RedTeamingState) -> RedTeamingState:
         """Decide what to do next based on the analysis."""

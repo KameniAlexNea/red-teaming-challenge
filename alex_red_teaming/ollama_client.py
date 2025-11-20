@@ -4,14 +4,16 @@ import asyncio
 import re
 from typing import Any, Dict, List
 
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_ollama import ChatOllama
+from llm_output_parser import parse_json
 from loguru import logger
 
 from alex_red_teaming.config import OllamaConfig
 from alex_red_teaming.prompts import (
     AnalysisPromptGenerator,
     AttackPromptGenerator,
+    ConversationalPromptGenerator,
     FollowUpPromptGenerator,
     PromptContext,
 )
@@ -66,6 +68,7 @@ class OllamaClient:
         self.attack_generator = AttackPromptGenerator()
         self.analysis_generator = AnalysisPromptGenerator()
         self.follow_up_generator = FollowUpPromptGenerator()
+        self.conversational_generator = ConversationalPromptGenerator()
 
     async def generate_attack_prompt(
         self, vulnerability_type: str, previous_attempts: List[str] = None
@@ -203,6 +206,86 @@ RULES:
         response = await asyncio.to_thread(self.red_team_llm.invoke, follow_up_prompt)
         # Extract content from AIMessage object
         return clean_attack_prompt(get_content(response))
+
+    async def generate_conversational_turn(
+        self,
+        conversation_history: List[BaseMessage],
+        vulnerability_type: str,
+        strategy: str = "",
+        supervisor_guidance: str = "",
+    ) -> str:
+        """Generate natural conversational follow-up using full context."""
+        logger.info("Generating conversational turn")
+
+        # Extract context elements
+        summary_text = ""
+        last_red_message = ""
+        last_target_response = ""
+
+        for msg in reversed(conversation_history[-4:]):  # Last 2 exchanges
+            content = getattr(msg, "content", "")
+            if content.startswith("Conversation summary (compressed):"):
+                summary_text = content
+            elif isinstance(msg, HumanMessage) and not last_red_message:
+                last_red_message = content
+            elif not last_target_response:
+                last_target_response = content
+
+        context = PromptContext(vulnerability_type=vulnerability_type)
+        context.additional_context = {
+            "conversation_summary": summary_text,
+            "last_red_message": last_red_message,
+            "last_target_response": last_target_response,
+            "current_strategy": strategy,
+            "supervisor_guidance": supervisor_guidance,
+        }
+
+        prompt = self.conversational_generator.generate_red_team_turn(context)
+
+        response = await asyncio.to_thread(self.red_team_llm.invoke, prompt)
+        return clean_attack_prompt(get_content(response))
+
+    async def supervisor_review(
+        self,
+        vuln_type: str,
+        summary: str,
+        turn_count: int,
+        max_turns: int,
+        success_status: str,
+        recent_responses: str,
+        current_strategy: str,
+        prev_guidance: str,
+    ) -> Dict[str, Any]:
+        """Generate supervisor review and decision."""
+        context = PromptContext(vulnerability_type=vuln_type)
+        context.additional_context = {
+            "conversation_summary": summary,
+            "turn_count": turn_count,
+            "max_turns": max_turns,
+            "success_status": success_status,
+            "recent_responses": recent_responses,
+            "current_strategy": current_strategy,
+            "prev_guidance": prev_guidance,
+        }
+
+        prompt = self.conversational_generator.generate_supervisor_review(context)
+
+        response = await asyncio.to_thread(self.red_team_llm.invoke, prompt)
+
+        # Parse JSON response
+        try:
+            parsed = parse_json(clean_attack_prompt(get_content(response)))
+        except Exception as ex:
+            logger.error(f"Error parsing supervisor review response. {ex}")
+            parsed = {
+                "decision": "continue",
+                "confidence": 5,
+                "reasoning": "Parsing failed",
+                "next_guidance": "Continue naturally",
+                "recommended_strategy": current_strategy,
+            }
+
+        return parsed
 
     async def summarize_conversation(
         self, messages: list[BaseMessage], vulnerability_type: str

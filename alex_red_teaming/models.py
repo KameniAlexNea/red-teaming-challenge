@@ -108,6 +108,12 @@ class RedTeamingState:
     # Validator can force a specific next strategy
     forced_strategy: str = ""
 
+    # Conversational framework fields
+    current_strategy: str = ""
+    supervisor_guidance: str = ""
+    conversation_turn_count: int = 0
+    refusal_streak: int = 0
+
     @property
     def issues_found(self) -> int:
         """Return the number of issues found."""
@@ -138,6 +144,10 @@ class RedTeamingState:
         data["attempted_vulnerability_types"] = [
             t.value for t in self.attempted_vulnerability_types
         ]
+        # Conversational fields are simple primitives, serialize as-is
+        data["current_strategy"] = self.current_strategy
+        data["supervisor_guidance"] = self.supervisor_guidance
+        data["conversation_turn_count"] = self.conversation_turn_count
         # Add computed properties
         data["issues_found"] = self.issues_found
         data["is_complete"] = self.is_complete

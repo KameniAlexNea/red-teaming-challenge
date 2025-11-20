@@ -6,32 +6,30 @@ config:
 graph TD;
 	__start__([<p>__start__</p>]):::first
 	initialize(initialize)
-	generate_attack(generate_attack)
-	validate_attack(validate_attack)
-	refine_attack(refine_attack)
-	test_target(test_target)
-	analyze_response(analyze_response)
+	red_team_turn(red_team_turn)
+	target_turn(target_turn)
+	analyzer_turn(analyzer_turn)
+	supervisor_review(supervisor_review)
 	decide_next_action(decide_next_action)
 	summarize_trim(summarize_trim)
 	save_vulnerability(save_vulnerability)
 	finalize(finalize)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> initialize;
-	analyze_response --> decide_next_action;
+	analyzer_turn -. &nbsp;direct&nbsp; .-> decide_next_action;
+	analyzer_turn -. &nbsp;summarize&nbsp; .-> summarize_trim;
 	decide_next_action -.-> finalize;
-	decide_next_action -. &nbsp;continue_conversation&nbsp; .-> generate_attack;
 	decide_next_action -. &nbsp;new_conversation&nbsp; .-> initialize;
+	decide_next_action -. &nbsp;continue_conversation&nbsp; .-> red_team_turn;
 	decide_next_action -.-> save_vulnerability;
 	decide_next_action -.-> summarize_trim;
-	generate_attack --> validate_attack;
-	initialize --> generate_attack;
-	refine_attack --> validate_attack;
+	initialize --> red_team_turn;
+	red_team_turn --> target_turn;
 	save_vulnerability --> decide_next_action;
-	summarize_trim --> generate_attack;
-	test_target --> analyze_response;
-	validate_attack -. &nbsp;reroll&nbsp; .-> generate_attack;
-	validate_attack -. &nbsp;refine&nbsp; .-> refine_attack;
-	validate_attack -. &nbsp;to_target&nbsp; .-> test_target;
+	summarize_trim -. &nbsp;continue&nbsp; .-> red_team_turn;
+	summarize_trim -. &nbsp;supervisor&nbsp; .-> supervisor_review;
+	supervisor_review --> decide_next_action;
+	target_turn --> analyzer_turn;
 	finalize --> __end__;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
