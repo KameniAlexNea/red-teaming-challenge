@@ -1,0 +1,38 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	initialize(initialize)
+	generate_attack(generate_attack)
+	validate_attack(validate_attack)
+	refine_attack(refine_attack)
+	test_target(test_target)
+	analyze_response(analyze_response)
+	decide_next_action(decide_next_action)
+	summarize_trim(summarize_trim)
+	save_vulnerability(save_vulnerability)
+	finalize(finalize)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> initialize;
+	analyze_response --> decide_next_action;
+	decide_next_action -.-> finalize;
+	decide_next_action -. &nbsp;continue_conversation&nbsp; .-> generate_attack;
+	decide_next_action -. &nbsp;new_conversation&nbsp; .-> initialize;
+	decide_next_action -.-> save_vulnerability;
+	decide_next_action -.-> summarize_trim;
+	generate_attack --> validate_attack;
+	initialize --> generate_attack;
+	refine_attack --> validate_attack;
+	save_vulnerability --> decide_next_action;
+	summarize_trim --> generate_attack;
+	test_target --> analyze_response;
+	validate_attack -. &nbsp;reroll&nbsp; .-> generate_attack;
+	validate_attack -. &nbsp;refine&nbsp; .-> refine_attack;
+	validate_attack -. &nbsp;to_target&nbsp; .-> test_target;
+	finalize --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
