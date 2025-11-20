@@ -1,11 +1,12 @@
 """Conversation summarizer and context trimmer."""
 
-from loguru import logger
 from typing import List
+
+from langchain_core.messages import BaseMessage, SystemMessage
+from loguru import logger
+
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
-from langchain_core.messages import BaseMessage, SystemMessage
-
 
 SUMMARY_PROMPT = """
 You are a concise conversation summarizer for a red-teaming session.
@@ -42,7 +43,9 @@ class ConversationSummarizer:
             state.current_conversation.metadata["summary"] = text
             # Trim: keep last N messages and prepend a SystemMessage with summary
             tail = msgs[-self.keep_last :]
-            summary_sys = SystemMessage(content=f"Conversation summary (compressed):\n{text}")
+            summary_sys = SystemMessage(
+                content=f"Conversation summary (compressed):\n{text}"
+            )
             state.current_conversation.messages = [summary_sys] + tail
             logger.info("Conversation summarized and trimmed")
         except Exception as e:

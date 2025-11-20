@@ -1,10 +1,11 @@
 """Configuration settings for the red-teaming agent."""
 
-from dataclasses import dataclass
-from typing import List
 import os
-import yaml
+from dataclasses import dataclass
 from pathlib import Path
+from typing import List
+
+import yaml
 from dotenv import load_dotenv
 
 load_dotenv()

@@ -1,12 +1,13 @@
 """Utility functions for the red-teaming agent."""
 
 import json
-from loguru import logger
+import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
-from datetime import datetime
+
 from llm_output_parser import parse_json
-import logging
+from loguru import logger
 
 
 def setup_logging(log_level: str = "INFO", log_file: str = None) -> None:
@@ -66,13 +67,19 @@ def parse_analysis_response(analysis: str) -> tuple[dict, dict]:
     try:
         parsed_data = parse_json(analysis, allow_incomplete=True)
         # Navigate into known containers
-        va = parsed_data.get("vulnerability_assessment") if isinstance(parsed_data, dict) else None
+        va = (
+            parsed_data.get("vulnerability_assessment")
+            if isinstance(parsed_data, dict)
+            else None
+        )
         if isinstance(va, dict):
             lower_va = {k.lower(): v for k, v in va.items()}
         else:
             # Accept flat structure with various casings
             lower_va = (
-                {k.lower(): v for k, v in parsed_data.items()} if isinstance(parsed_data, dict) else {}
+                {k.lower(): v for k, v in parsed_data.items()}
+                if isinstance(parsed_data, dict)
+                else {}
             )
 
         # vulnerability_found
@@ -98,29 +105,47 @@ def parse_analysis_response(analysis: str) -> tuple[dict, dict]:
 
         # explanation/evidence
         # Try detailed sections
-        detailed = parsed_data.get("detailed_analysis", {}) if isinstance(parsed_data, dict) else {}
+        detailed = (
+            parsed_data.get("detailed_analysis", {})
+            if isinstance(parsed_data, dict)
+            else {}
+        )
         if isinstance(detailed, dict):
             exp = detailed.get("vulnerability_explanation") or detailed.get("analysis")
             if isinstance(exp, str):
                 result["explanation"] = exp
         if not result["explanation"]:
-            result["explanation"] = lower_va.get("explanation", "") if isinstance(lower_va, dict) else ""
+            result["explanation"] = (
+                lower_va.get("explanation", "") if isinstance(lower_va, dict) else ""
+            )
 
         evidence = ""
-        ea = parsed_data.get("evidence_analysis", {}) if isinstance(parsed_data, dict) else {}
+        ea = (
+            parsed_data.get("evidence_analysis", {})
+            if isinstance(parsed_data, dict)
+            else {}
+        )
         if isinstance(ea, dict):
             quotes = ea.get("direct_quotes", [])
             if isinstance(quotes, list) and quotes:
                 evidence = " | ".join(q for q in quotes if isinstance(q, str))
         if not evidence:
-            evidence = lower_va.get("evidence", "") if isinstance(lower_va, dict) else ""
+            evidence = (
+                lower_va.get("evidence", "") if isinstance(lower_va, dict) else ""
+            )
         result["evidence"] = evidence
 
         # target status and control
-        status = parsed_data.get("target_response_status", {}) if isinstance(parsed_data, dict) else {}
+        status = (
+            parsed_data.get("target_response_status", {})
+            if isinstance(parsed_data, dict)
+            else {}
+        )
         if isinstance(status, dict):
             result["target_refused"] = bool(status.get("refused", False))
-        control = parsed_data.get("control", {}) if isinstance(parsed_data, dict) else {}
+        control = (
+            parsed_data.get("control", {}) if isinstance(parsed_data, dict) else {}
+        )
         if isinstance(control, dict):
             decision = control.get("decision", "")
             result["decision"] = str(decision).lower()
@@ -137,7 +162,9 @@ def parse_analysis_response(analysis: str) -> tuple[dict, dict]:
             line_lower = line.lower()
 
             if line_lower.startswith("vulnerability_found:"):
-                result["vulnerability_found"] = any(k in line_lower for k in ["yes", "true"])
+                result["vulnerability_found"] = any(
+                    k in line_lower for k in ["yes", "true"]
+                )
             elif line_lower.startswith("severity:"):
                 severity = line.split(":", 1)[1].strip().lower()
                 if severity in ["low", "medium", "high", "critical"]:

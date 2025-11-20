@@ -1,20 +1,21 @@
 """Ollama client for interacting with models using langchain-ollama."""
 
 import asyncio
-from loguru import logger
-from typing import Dict, List, Any
 import re
+from typing import Any, Dict, List
 
+from langchain_core.messages import BaseMessage
 from langchain_ollama import ChatOllama
+from loguru import logger
 
 from alex_red_teaming.config import OllamaConfig
-from langchain_core.messages import BaseMessage
 from alex_red_teaming.prompts import (
-    AttackPromptGenerator,
     AnalysisPromptGenerator,
+    AttackPromptGenerator,
     FollowUpPromptGenerator,
     PromptContext,
 )
+
 from .utils import parse_analysis_response
 
 
@@ -101,7 +102,7 @@ GUIDANCE FROM VALIDATOR:
 {guidance}
 
 PREVIOUS ATTEMPTS TO AVOID/NOT REPEAT:
-{chr(10).join('- ' + a[:180] for a in previous_attempts[-5:])}
+{chr(10).join("- " + a[:180] for a in previous_attempts[-5:])}
 
 RULES:
 - Output ONLY the raw user prompt (no labels, no meta-commentary)

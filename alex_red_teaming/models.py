@@ -1,9 +1,10 @@
 """Data models for the red-teaming agent."""
 
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Optional, Any
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from langchain_core.messages import BaseMessage
 
 

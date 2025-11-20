@@ -1,8 +1,9 @@
 """Action decision agent."""
 
 from loguru import logger
-from alex_red_teaming.models import RedTeamingState
+
 from alex_red_teaming.config import Config
+from alex_red_teaming.models import RedTeamingState
 
 
 class ActionDecider:
@@ -15,7 +16,8 @@ class ActionDecider:
         """Decide the next action based on current state."""
         # If a refusal occurred or a point of failure was marked, consider summarizing & trimming
         if state.current_conversation and (
-            state.target_refused or state.current_conversation.metadata.get("point_of_failure")
+            state.target_refused
+            or state.current_conversation.metadata.get("point_of_failure")
         ):
             return "summarize_trim"
         # Honor post-response decision from validator B when available

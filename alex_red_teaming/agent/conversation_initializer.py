@@ -1,9 +1,10 @@
 """Conversation initialization agent."""
 
-from loguru import logger
 from langsmith import uuid7
-from alex_red_teaming.models import RedTeamingState, Conversation, VulnerabilityType
+from loguru import logger
+
 from alex_red_teaming.config import Config
+from alex_red_teaming.models import Conversation, RedTeamingState, VulnerabilityType
 
 
 class ConversationInitializer:

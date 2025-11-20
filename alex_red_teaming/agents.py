@@ -1,26 +1,25 @@
 """Red-teaming agent using LangGraph workflow."""
 
+from typing import Any, Dict
+
+from langgraph.errors import GraphRecursionError
+from langgraph.graph import END, START, StateGraph
 from loguru import logger
-from typing import Dict, Any
 
-from langgraph.graph import StateGraph, START, END
-
+from alex_red_teaming.agent import (
+    ActionDecider,  # new validator
+    AttackGenerator,
+    ConversationInitializer,
+    ConversationSummarizer,
+    ResponseAnalyzer,
+    ResultsFinalizer,
+    TargetTester,
+    VulnerabilitySaver,
+)
+from alex_red_teaming.agent.attack_validator import AttackValidator
 from alex_red_teaming.config import Config
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
-from alex_red_teaming.agent import (
-    ConversationInitializer,
-    AttackGenerator,
-    # new validator
-    TargetTester,
-    ResponseAnalyzer,
-    ActionDecider,
-    VulnerabilitySaver,
-    ResultsFinalizer,
-    ConversationSummarizer,
-)
-from alex_red_teaming.agent.attack_validator import AttackValidator
-from langgraph.errors import GraphRecursionError
 
 
 class RedTeamingAgent:
@@ -71,7 +70,11 @@ class RedTeamingAgent:
         workflow.add_conditional_edges(
             "validate_attack",
             self._route_after_validation,
-            {"to_target": "test_target", "refine": "refine_attack", "reroll": "generate_attack"},
+            {
+                "to_target": "test_target",
+                "refine": "refine_attack",
+                "reroll": "generate_attack",
+            },
         )
         workflow.add_edge("refine_attack", "validate_attack")
         workflow.add_edge("test_target", "analyze_response")
@@ -125,7 +128,11 @@ class RedTeamingAgent:
 
     def _route_after_validation(self, state: RedTeamingState) -> str:
         """Route to target if aligned, otherwise refine attack."""
-        decision = str(state.validator_feedback.get("action", "")).lower() if isinstance(state.validator_feedback, dict) else ""
+        decision = (
+            str(state.validator_feedback.get("action", "")).lower()
+            if isinstance(state.validator_feedback, dict)
+            else ""
+        )
         if decision == "change_strategy":
             # Reroll a new attack with forced strategy
             return "reroll"
@@ -157,25 +164,38 @@ class RedTeamingAgent:
 
         # Run the workflow
         try:
-            final_state: RedTeamingState = await self.workflow.ainvoke(
+            final_state: RedTeamingState | dict = await self.workflow.ainvoke(
                 self.state, {"recursion_limit": self.config.ollama.recursion_limit}
             )
             logger.info(
                 f"Red-teaming workflow completed successfully. Final state: {final_state}"
             )
-            if isinstance(final_state, dict):
-                logger.error(f"Workflow returned unexpected state type: {final_state}")
-                return final_state
 
-            return {
-                "success": True,
-                "vulnerabilities_found": final_state.issues_found,
-                "total_conversations": len(final_state.failed_attempts)
-                + (1 if final_state.current_conversation else 0),
-                "vulnerabilities": [
-                    vuln.to_dict() for vuln in final_state.discovered_vulnerabilities
-                ],
-            }
+            # Normalize return shape for main.py regardless of underlying state type
+            if isinstance(final_state, dict):
+                state_dict = final_state
+                vulns = state_dict.get("discovered_vulnerabilities", []) or []
+                failed = state_dict.get("failed_attempts", []) or []
+                curr = state_dict.get("current_conversation")
+                return {
+                    "success": True,
+                    "vulnerabilities_found": len(vulns),
+                    "total_conversations": len(failed) + (1 if curr else 0),
+                    "vulnerabilities": [
+                        v.to_dict() if hasattr(v, "to_dict") else v for v in vulns
+                    ],
+                }
+            else:
+                return {
+                    "success": True,
+                    "vulnerabilities_found": final_state.issues_found,
+                    "total_conversations": len(final_state.failed_attempts)
+                    + (1 if final_state.current_conversation else 0),
+                    "vulnerabilities": [
+                        vuln.to_dict()
+                        for vuln in final_state.discovered_vulnerabilities
+                    ],
+                }
 
         except GraphRecursionError as e:
             logger.error(f"Graph recursion limit exceeded: {e}")

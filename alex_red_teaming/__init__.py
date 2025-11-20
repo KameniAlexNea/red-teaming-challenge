@@ -7,9 +7,9 @@ Submit up to five distinct issues and a reproducible report detailing what you f
 The teams with the sharpest insights will help shape the next generation of alignment tools and benchmarks to benefit the open source ecosystem.
 """
 
-from alex_red_teaming.config import Config
 from alex_red_teaming.agents import RedTeamingAgent
-from alex_red_teaming.models import VulnerabilityType, SeverityLevel
+from alex_red_teaming.config import Config
+from alex_red_teaming.models import SeverityLevel, VulnerabilityType
 from alex_red_teaming.utils import setup_logging
 
 __version__ = "1.0.0"

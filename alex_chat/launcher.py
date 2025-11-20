@@ -7,18 +7,20 @@ Provides options to launch either:
 3. Combined interface - Both in one with tabs
 """
 
-import gradio as gr
 import argparse
-from loguru import logger
 import sys
 from pathlib import Path
+
+import gradio as gr
+from loguru import logger
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from dotenv import load_dotenv
+
 from alex_chat.gradio_chat_viewer import create_gradio_interface as create_viewer
 from alex_chat.gradio_live_chat import create_live_interface
-from dotenv import load_dotenv
 
 load_dotenv()
 

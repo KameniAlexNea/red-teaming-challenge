@@ -1,10 +1,11 @@
 """Attack prompt generation agent."""
 
+from langchain_core.messages import HumanMessage
 from loguru import logger
+
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
 from alex_red_teaming.prompts.follow_up_prompts import FollowUpPromptGenerator
-from langchain_core.messages import HumanMessage
 
 
 class AttackGenerator:

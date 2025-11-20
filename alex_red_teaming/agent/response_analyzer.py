@@ -1,6 +1,7 @@
 """Response analysis agent."""
 
 from loguru import logger
+
 from alex_red_teaming.models import RedTeamingState, SeverityLevel
 from alex_red_teaming.ollama_client import OllamaClient
 
@@ -45,9 +46,15 @@ class ResponseAnalyzer:
                 if isinstance(nsg, str):
                     state.next_step_guidance = nsg
                 # Fallback to full_result shape
-                if (not state.post_response_decision) and full_result and isinstance(full_result, dict):
+                if (
+                    (not state.post_response_decision)
+                    and full_result
+                    and isinstance(full_result, dict)
+                ):
                     control = full_result.get("control", {})
-                    state.post_response_decision = str(control.get("decision", "")).lower()
+                    state.post_response_decision = str(
+                        control.get("decision", "")
+                    ).lower()
                     state.next_step_guidance = control.get("next_step_guidance", "")
                     status = full_result.get("target_response_status", {})
                     state.target_refused = bool(status.get("refused", False))
