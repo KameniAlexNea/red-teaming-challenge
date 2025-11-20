@@ -1,9 +1,10 @@
 """Target model testing agent."""
 
+from langchain_core.messages import AIMessage
 from loguru import logger
+
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
-from langchain_core.messages import AIMessage
 
 
 class TargetTester:

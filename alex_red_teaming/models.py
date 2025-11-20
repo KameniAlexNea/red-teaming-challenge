@@ -1,9 +1,10 @@
 """Data models for the red-teaming agent."""
 
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Optional, Any
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from langchain_core.messages import BaseMessage
 
 
@@ -94,7 +95,18 @@ class RedTeamingState:
     current_vulnerability_type: Optional[VulnerabilityType] = None
     conversation_turn: int = 0
     max_turns: int = 10
-    attack_strategies_tried: List[str] = field(default_factory=list)
+    attempted_vulnerability_types: List[VulnerabilityType] = field(default_factory=list)
+    # Validator (Red Team B) fields
+    attack_aligned: bool = False
+    validator_feedback: Dict[str, Any] = field(default_factory=dict)
+    attack_guidance: str = ""
+    validation_retries: int = 0
+    # Post-response analysis fields
+    target_refused: bool = False
+    next_step_guidance: str = ""
+    post_response_decision: str = ""  # "continue" | "revise" | "reset"
+    # Validator can force a specific next strategy
+    forced_strategy: str = ""
 
     @property
     def issues_found(self) -> int:
@@ -122,10 +134,19 @@ class RedTeamingState:
             if self.current_vulnerability_type
             else None
         )
+        # Convert attempted vulnerability types to plain values
+        data["attempted_vulnerability_types"] = [
+            t.value for t in self.attempted_vulnerability_types
+        ]
         # Add computed properties
         data["issues_found"] = self.issues_found
         data["is_complete"] = self.is_complete
         return data
+
+    # Backward-compatibility alias for prior field name used incorrectly
+    @property
+    def attack_strategies_tried(self) -> List[VulnerabilityType]:
+        return self.attempted_vulnerability_types
 
 
 @dataclass

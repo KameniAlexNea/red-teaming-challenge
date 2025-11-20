@@ -1,8 +1,9 @@
 """Base prompt templates and utilities."""
 
-from typing import Dict, List, Any
-from jinja2 import Template
 from dataclasses import dataclass
+from typing import Any, Dict, List
+
+from jinja2 import Template
 
 
 @dataclass

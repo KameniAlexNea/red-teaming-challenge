@@ -1,8 +1,10 @@
 """Follow-up prompt generation for continuing adversarial conversations."""
 
 from typing import List
-from .base_prompts import BasePromptTemplate, PromptContext
+
 from langchain_core.messages import BaseMessage, HumanMessage
+
+from .base_prompts import BasePromptTemplate, PromptContext
 
 # Standard footer for follow-up prompts
 FOLLOW_UP_FOOTER = """{% if previous_attempts %}

@@ -5,20 +5,22 @@ This interface allows you to start a red-teaming session and watch the conversat
 unfold between the red-teaming agent and target LLM in real-time.
 """
 
-import gradio as gr
 import asyncio
-from typing import List, Dict, Any, Optional
-from loguru import logger
-from pathlib import Path
 import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import gradio as gr
+from loguru import logger
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from alex_red_teaming.config import Config
-from alex_red_teaming.agents import RedTeamingAgent
-from alex_red_teaming.models import VulnerabilityType
 import os
+
+from alex_red_teaming.agents import RedTeamingAgent
+from alex_red_teaming.config import Config
+from alex_red_teaming.models import VulnerabilityType
 
 
 class LiveRedTeamingSession:

@@ -1,8 +1,9 @@
+import asyncio
+
+from langchain_core.messages import BaseMessage
 from langchain_ollama import ChatOllama
 
 from alex_red_teaming.config import OllamaConfig
-from langchain_core.messages import BaseMessage
-import asyncio
 
 
 async def generate_text(

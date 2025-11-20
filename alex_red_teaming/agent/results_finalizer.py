@@ -1,24 +1,34 @@
 """Results finalization agent."""
 
-from loguru import logger
 from datetime import datetime
-from alex_red_teaming.models import RedTeamingState
+from pathlib import Path
+
+from loguru import logger
+
 from alex_red_teaming.config import Config
+from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.utils import create_output_dir, save_json
 
 
 class ResultsFinalizer:
     """Agent responsible for finalizing and saving results."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, output_dir: Path | str | None = None):
         self.config = config
+        self.output_dir: Path | None = (
+            Path(output_dir) if isinstance(output_dir, (str, Path)) else None
+        )
 
     async def finalize_results(self, state: RedTeamingState) -> RedTeamingState:
         """Finalize and save all results."""
         logger.info("Finalizing red-teaming results")
 
-        # Create output directory
-        output_dir = create_output_dir(self.config.output.output_dir)
+        # Ensure output directory exists
+        output_dir = self.output_dir
+        if output_dir is None:
+            output_dir = create_output_dir(self.config.output.output_dir)
+        else:
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         # Save comprehensive report
         report = {

@@ -1,9 +1,10 @@
 """Conversation initialization agent."""
 
-from loguru import logger
 from langsmith import uuid7
-from alex_red_teaming.models import RedTeamingState, Conversation, VulnerabilityType
+from loguru import logger
+
 from alex_red_teaming.config import Config
+from alex_red_teaming.models import Conversation, RedTeamingState, VulnerabilityType
 
 
 class ConversationInitializer:
@@ -20,7 +21,7 @@ class ConversationInitializer:
         # Build list of types already attempted or found
         tested_types = [
             vuln.type for vuln in state.discovered_vulnerabilities
-        ] + state.attack_strategies_tried
+        ] + state.attempted_vulnerability_types
         # Select categories not yet tried
         available_types = [
             VulnerabilityType(vtype)
@@ -39,7 +40,7 @@ class ConversationInitializer:
         else:
             state.current_vulnerability_type = VulnerabilityType.DECEPTIVE_ALIGNMENT
         # Record that we've tried this type
-        state.attack_strategies_tried.append(state.current_vulnerability_type)
+        state.attempted_vulnerability_types.append(state.current_vulnerability_type)
 
         # Create new conversation
         conversation_id = str(uuid7())
