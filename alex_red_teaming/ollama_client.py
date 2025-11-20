@@ -182,6 +182,24 @@ RULES:
             conversation_history, vulnerability_type, strategy
         )
 
+        # If a compressed summary system message exists, prepend it as context
+        try:
+            summary_text = None
+            for m in conversation_history:
+                content = getattr(m, "content", "") or ""
+                if isinstance(content, str) and content.startswith(
+                    "Conversation summary (compressed):"
+                ):
+                    summary_text = content
+                    break
+            if summary_text:
+                follow_up_prompt = (
+                    f"Context summary for continuity and brevity:\n{summary_text}\n\n"
+                    + follow_up_prompt
+                )
+        except Exception:
+            pass
+
         response = await asyncio.to_thread(self.red_team_llm.invoke, follow_up_prompt)
         # Extract content from AIMessage object
         return clean_attack_prompt(get_content(response))

@@ -6,8 +6,8 @@ from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, START, StateGraph
 from loguru import logger
 
+from alex_red_teaming.agent import ActionDecider  # new validator
 from alex_red_teaming.agent import (
-    ActionDecider,  # new validator
     AttackGenerator,
     ConversationInitializer,
     ConversationSummarizer,
@@ -20,6 +20,7 @@ from alex_red_teaming.agent.attack_validator import AttackValidator
 from alex_red_teaming.config import Config
 from alex_red_teaming.models import RedTeamingState
 from alex_red_teaming.ollama_client import OllamaClient
+from alex_red_teaming.utils import create_output_dir
 
 
 class RedTeamingAgent:
@@ -33,6 +34,9 @@ class RedTeamingAgent:
             max_turns=config.red_teaming.max_conversation_turns
         )
 
+        # Create a single run-scoped output directory and share it
+        self.output_dir = create_output_dir(config.output.output_dir)
+
         # Initialize modular agents
         self.conversation_initializer = ConversationInitializer(config)
         self.attack_generator = AttackGenerator(config, self.ollama_client)
@@ -40,8 +44,8 @@ class RedTeamingAgent:
         self.target_tester = TargetTester(self.ollama_client)
         self.response_analyzer = ResponseAnalyzer(self.ollama_client)
         self.action_decider = ActionDecider(config)
-        self.vulnerability_saver = VulnerabilitySaver(config)
-        self.results_finalizer = ResultsFinalizer(config)
+        self.vulnerability_saver = VulnerabilitySaver(config, self.output_dir)
+        self.results_finalizer = ResultsFinalizer(config, self.output_dir)
         self.conversation_summarizer = ConversationSummarizer(self.ollama_client)
 
         self.workflow = self._create_workflow()
@@ -79,6 +83,9 @@ class RedTeamingAgent:
         workflow.add_edge("refine_attack", "validate_attack")
         workflow.add_edge("test_target", "analyze_response")
         workflow.add_edge("analyze_response", "decide_next_action")
+
+        # After summarizing and trimming, continue generating the next attack
+        workflow.add_edge("summarize_trim", "generate_attack")
 
         # Conditional edges from decide_next_action
         workflow.add_conditional_edges(
