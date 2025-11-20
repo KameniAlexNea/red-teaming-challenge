@@ -5,10 +5,13 @@ from .attack_prompts import AttackPromptGenerator
 from .base_prompts import BasePromptTemplate, PromptContext
 from .follow_up_prompts import FollowUpPromptGenerator
 
+from .conversational_prompts import ConversationalPromptGenerator
+
 __all__ = [
     "AttackPromptGenerator",
     "AnalysisPromptGenerator",
     "FollowUpPromptGenerator",
     "BasePromptTemplate",
     "PromptContext",
+    "ConversationalPromptGenerator",
 ]

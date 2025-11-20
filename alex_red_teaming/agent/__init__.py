@@ -8,6 +8,8 @@ from .response_analyzer import ResponseAnalyzer
 from .results_finalizer import ResultsFinalizer
 from .target_tester import TargetTester
 from .vulnerability_saver import VulnerabilitySaver
+from .red_team_conversationalist import RedTeamConversationalist
+from .supervisor import Supervisor
 
 __all__ = [
     "ConversationInitializer",
@@ -18,4 +20,6 @@ __all__ = [
     "VulnerabilitySaver",
     "ResultsFinalizer",
     "ConversationSummarizer",
+    "RedTeamConversationalist",
+    "Supervisor",
 ]
